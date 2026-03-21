@@ -1,0 +1,235 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { MOCK_COURSES } from '../../mockData';
+import { useAuth } from '../../context/AuthContext';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import Badge from '../../components/Badge';
+import Marquee from '../../components/Marquee';
+import { Trophy, Star, Shield, Medal, Award } from 'lucide-react';
+
+export default function MyCourses() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [search, setSearch] = useState('');
+  
+  const heroRef = useRef(null);
+  const cardsRef = useRef(null);
+  const pointsRef = useRef(null);
+
+  useEffect(() => {
+    // Hero Text Stagger
+    if (heroRef.current) {
+      const chars = heroRef.current.querySelectorAll('.char');
+      gsap.fromTo(chars,
+        { y: 80, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.03, ease: 'power3.out', delay: 0.2 }
+      );
+    }
+    
+    // Cards Stagger
+    if (cardsRef.current) {
+      const cards = cardsRef.current.children;
+      gsap.fromTo(cards,
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out', delay: 0.4 }
+      );
+      
+      // Progress bars
+      const bars = cardsRef.current.querySelectorAll('.progress-fill');
+      bars.forEach(bar => {
+        const target = bar.getAttribute('data-width');
+        gsap.fromTo(bar, 
+          { width: '0%' }, 
+          { width: target, duration: 1.5, ease: 'power2.out', delay: 0.8 }
+        );
+      });
+    }
+
+    // Points Count Up
+    if (pointsRef.current) {
+      const obj = { val: 0 };
+      gsap.to(obj, {
+        val: 1250,
+        duration: 2,
+        ease: 'power3.out',
+        delay: 0.5,
+        onUpdate: () => {
+          if (pointsRef.current) pointsRef.current.innerText = Math.floor(obj.val).toLocaleString();
+        }
+      });
+    }
+  }, []);
+
+  const splitText = "YOUR LEARNING JOURNEY".split('').map((char, i) => (
+    <span key={i} className="char inline-block">{char === ' ' ? '\u00A0' : char}</span>
+  ));
+
+  const filtered = MOCK_COURSES.filter(c => c.status === 'PUBLISHED' && c.title.toLowerCase().includes(search.toLowerCase()));
+
+  // Profile Data Mock
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
+
+  return (
+    <div className="bg-[#141314] min-h-screen pb-32">
+      {/* Hero Section */}
+      <div className="w-full py-20 px-8 max-w-7xl mx-auto border-b border-[#2E2A2B]">
+        <h1 ref={heroRef} className="text-[72px] font-[800] text-[#F5F0EB] tracking-[-0.04em] leading-tight flex flex-wrap overflow-hidden">
+          {splitText}
+        </h1>
+        <p className="text-[#6B6460] mt-4 text-[18px] max-w-2xl font-medium">
+          Master new skills, earn points, and unlock achievements. Consistency is your only shortcut.
+        </p>
+      </div>
+
+      <Marquee text="LEARNOVA · LEARN · GROW · ACHIEVE · BUILD · " />
+
+      {/* Main Two Column Layout */}
+      <div className="max-w-7xl mx-auto px-8 pt-16 flex flex-col lg:flex-row gap-12">
+        
+        {/* Left Column: Courses */}
+        <div className="flex-1">
+          <div className="mb-12 max-w-md">
+            <Input 
+              placeholder="SEARCH CATALOG OR ENROLLMENTS..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filtered.map((course, i) => (
+              <CourseCard key={course.id} course={course} idx={i} navigate={navigate} />
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column: Profile Panel */}
+        <div className="w-full lg:w-[320px] flex-shrink-0">
+          <div className="bg-[#1C1A1B] border border-[#2E2A2B] p-8 sticky top-28">
+            <div className="flex items-center space-x-6 mb-8">
+              <div className="w-16 h-16 rounded-full bg-[#FB460D] text-white flex items-center justify-center text-[20px] font-bold">
+                {initials}
+              </div>
+              <div>
+                <h3 className="text-[18px] font-bold text-[#F5F0EB]">{user?.name}</h3>
+                <Badge variant="default" className="mt-1">LEARNER</Badge>
+              </div>
+            </div>
+
+            <div className="w-full h-[1px] bg-[#2E2A2B] mb-8"></div>
+
+            <div className="mb-10 text-center">
+              <p className="text-[10px] uppercase text-[#6B6460] tracking-widest font-bold mb-2">TOTAL POINTS</p>
+              <p ref={pointsRef} className="text-[56px] font-bold text-[#FB460D] leading-none">
+                0
+              </p>
+            </div>
+
+            <div className="mb-8 p-4 border border-[#2E2A2B] bg-[#141314] flex items-center space-x-4">
+              <Trophy size={24} className="text-[#FB460D]" />
+              <div>
+                <p className="text-[10px] uppercase text-[#6B6460] tracking-widest font-bold">CURRENT RANK</p>
+                <p className="text-[14px] font-bold text-[#F5F0EB] uppercase">Gold Achiever</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[11px] uppercase text-[#6B6460] tracking-widest font-bold mb-4">MILESTONES</h4>
+              <BadgeRow icon={<Star size={14}/>} name="Newbie" pts="20" earned={true} />
+              <BadgeRow icon={<Shield size={14}/>} name="Explorer" pts="40" earned={true} />
+              <BadgeRow icon={<Medal size={14}/>} name="Achiever" pts="60" earned={true} />
+              <BadgeRow icon={<Award size={14}/>} name="Specialist" pts="80" earned={false} />
+              <BadgeRow icon={<Trophy size={14}/>} name="Master" pts="120" earned={false} />
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function CourseCard({ course, navigate, idx }) {
+  const cardRef = useRef(null);
+  const borderRef = useRef(null);
+
+  // Mock progress logic for UI presentation
+  let progress = 0;
+  let btnState = 'join'; // join | start | continue | completed
+  
+  if (idx === 0) { progress = 60; btnState = 'continue'; }
+  else if (idx === 1) { progress = 0; btnState = 'start'; }
+  else if (idx === 2) { progress = 100; btnState = 'completed'; }
+
+  const handleHover = (isHovering) => {
+    if (isHovering) {
+      gsap.to(cardRef.current, { y: -6, duration: 0.3, ease: 'power2.out' });
+      gsap.to(borderRef.current, { y: 0, duration: 0.3 });
+    } else {
+      gsap.to(cardRef.current, { y: 0, duration: 0.3, ease: 'power2.out' });
+      gsap.to(borderRef.current, { y: '-100%', duration: 0.3 });
+    }
+  };
+
+  const handleClick = () => {
+    navigate(`/courses/${course.id}`);
+  };
+
+  return (
+    <div className="relative pt-[2px] overflow-hidden group interactive cursor-pointer" onClick={handleClick} onMouseEnter={() => handleHover(true)} onMouseLeave={() => handleHover(false)}>
+      <div ref={borderRef} className="absolute top-0 left-0 right-0 h-[2px] bg-[#FB460D] z-20" style={{ transform: 'translateY(-100%)' }}></div>
+      <div ref={cardRef} className="bg-[#1C1A1B] border border-[#2E2A2B] rounded-none p-5 h-full flex flex-col relative z-10 w-full transform mt-[4px]">
+        <div className="h-40 mb-6 bg-gradient-to-br from-[#141314] to-[#2E2A2B] border border-[#2E2A2B]/50 relative">
+          <div className="absolute inset-0 bg-[#FB460D]/5mix-blend-overlay"></div>
+        </div>
+        
+        <h3 className="text-[17px] font-semibold text-[#F5F0EB] mb-2 leading-tight">{course.title}</h3>
+        <p className="text-[13px] text-[#6B6460] line-clamp-2 mb-4 flex-1">
+          Master the concepts required to build scalable modern web applications. Focus on architecture over syntax.
+        </p>
+
+        <div className="flex space-x-2 mb-6">
+          <Badge variant="default" className="!text-[9px]">Frontend</Badge>
+          <Badge variant="default" className="!text-[9px]">Advanced</Badge>
+        </div>
+
+        {/* Progress System inside Card */}
+        {btnState !== 'join' && (
+          <div className="mb-6">
+            <div className="flex justify-between text-[11px] font-bold tracking-widest text-[#6B6460] uppercase mb-2">
+              <span>Progress</span>
+              <span className={progress === 100 ? 'text-[#10B981]' : 'text-[#FB460D]'}>{progress}%</span>
+            </div>
+            <div className="w-full h-[2px] bg-[#2E2A2B]">
+              <div className="progress-fill h-full bg-[#FB460D]" data-width={`${progress}%`} style={{ width: '0%' }}></div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <div>
+          {btnState === 'join' && <Button variant="ghost" className="w-full !py-3">Join Course →</Button>}
+          {btnState === 'start' && <Button variant="primary" className="w-full !py-3">START LEARNING</Button>}
+          {btnState === 'continue' && <Button variant="primary" className="w-full !py-3">▶ CONTINUE</Button>}
+          {btnState === 'completed' && <Button variant="ghost" className="w-full !py-3 !text-[#10B981] !border-[#10B981]/30">COMPLETED ✓</Button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BadgeRow({ icon, name, pts, earned }) {
+  return (
+    <div className={`flex items-center justify-between transition-opacity ${earned ? 'opacity-100' : 'opacity-30'}`}>
+      <div className="flex items-center space-x-3">
+        <div className={`w-8 h-8 rounded-full border flex flex-col items-center justify-center ${earned ? 'border-[#FB460D] text-[#FB460D]' : 'border-[#6B6460] text-[#6B6460]'}`}>
+          {icon}
+        </div>
+        <p className={`text-[12px] font-bold uppercase tracking-widest ${earned ? 'text-[#F5F0EB]' : 'text-[#6B6460]'}`}>{name}</p>
+      </div>
+      <p className="text-[10px] font-bold text-[#6B6460] font-mono">{pts} PT</p>
+    </div>
+  );
+}

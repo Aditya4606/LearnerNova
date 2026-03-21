@@ -1,0 +1,124 @@
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Cursor from './components/Cursor';
+import Preloader from './components/Preloader';
+import PageTransition from './components/PageTransition';
+
+// Pages & Layouts
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
+import SuperLogin from './pages/superuser/SuperLogin';
+
+import SuperUserLayout from './layouts/SuperUserLayout';
+import Users from './pages/superuser/Users';
+
+import AdminLayout from './layouts/AdminLayout';
+import Courses from './pages/admin/Courses';
+import CourseForm from './pages/admin/CourseForm';
+import QuizBuilder from './pages/admin/QuizBuilder';
+import Reporting from './pages/admin/Reporting';
+
+import LearnerLayout from './layouts/LearnerLayout';
+import MyCourses from './pages/learner/MyCourses';
+import CourseDetail from './pages/learner/CourseDetail';
+
+import PlayerLayout from './layouts/PlayerLayout';
+import LessonPlayer from './pages/learner/LessonPlayer';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (user.role === 'superuser') return <Navigate to="/superuser/dashboard" replace />;
+    if (user.role === 'admin') return <Navigate to="/admin/courses" replace />;
+    return <Navigate to="/courses" replace />;
+  }
+  return children;
+};
+
+function App() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Lenis setup
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0, 0);
+
+    return () => {
+      lenis.destroy();
+      gsap.ticker.remove(lenis.raf);
+    };
+  }, []);
+
+  return (
+    <AuthProvider>
+      <Cursor />
+      {loading && <Preloader onComplete={() => setLoading(false)} />}
+      
+      {!loading && (
+        <BrowserRouter>
+          <PageTransition />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/superuser/login" element={<SuperLogin />} />
+            
+            {/* SuperUser Routes */}
+            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['superuser']}><SuperUserLayout /></ProtectedRoute>}>
+              <Route path="dashboard" element={<Users />} />
+              <Route path="users" element={<Users />} />
+              <Route path="" element={<Navigate to="dashboard" replace />} />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+              <Route path="courses" element={<Courses />} />
+              <Route path="courses/:id/edit" element={<CourseForm />} />
+              <Route path="courses/:id/quiz/:qid" element={<QuizBuilder />} />
+              <Route path="reporting" element={<Reporting />} />
+              <Route path="" element={<Navigate to="courses" replace />} />
+            </Route>
+            
+            {/* Learner Routes */}
+            <Route path="/courses" element={<ProtectedRoute allowedRoles={['learner', 'admin']}><LearnerLayout /></ProtectedRoute>}>
+              <Route index element={<MyCourses />} />
+              <Route path=":id" element={<CourseDetail />} />
+            </Route>
+
+            {/* Player Route */}
+            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['learner', 'admin']}><PlayerLayout /></ProtectedRoute>}>
+              <Route index element={<LessonPlayer />} />
+            </Route>
+            
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      )}
+    </AuthProvider>
+  );
+}
+
+export default App;
