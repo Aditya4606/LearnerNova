@@ -34,6 +34,7 @@ model Course {
   imageUrl     String?
   updatedAt    DateTime     @default(now()) @updatedAt
   website      String?
+  price        Float        @default(0)
   instructor   User         @relation("InstructorCourses", fields: [createdBy], references: [id])
   enrollments  Enrollment[]
   lessons      Lesson[]
