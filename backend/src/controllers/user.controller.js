@@ -2,7 +2,10 @@ import prisma from "../config/db.js";
 
 export const getUsers = async (req, res) => {
   try {
+    const { role } = req.query;
+    const where = role ? { role } : {};
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         email: true,
@@ -23,7 +26,7 @@ export const updateUserRole = async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
 
-    if (!['ADMIN', 'INSTRUCTOR', 'LEARNER'].includes(role)) {
+    if (!['ADMIN', 'INSTRUCTOR', 'LEARNER', 'SUPERADMIN'].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
 

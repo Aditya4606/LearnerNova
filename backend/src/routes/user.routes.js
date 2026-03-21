@@ -4,7 +4,7 @@ import { protect, isAdmin } from "../middlewares/authmiddleware.js";
 
 const router = express.Router();
 
-router.get("/", protect, isAdmin, getUsers);
+router.get("/", protect, getUsers);
 router.put("/:id/role", protect, isAdmin, updateUserRole);
 
 export default router;

@@ -34,4 +34,17 @@ export const api = {
     if (!res.ok) throw new Error(data.message || data.error || 'Request failed');
     return data;
   },
+
+  async upload(path, formData) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      // Do NOT set Content-Type header here. The browser will automatically set it to 
+      // multipart/form-data with the correct boundary.
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Upload failed');
+    return data;
+  }
 };

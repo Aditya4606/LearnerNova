@@ -12,13 +12,33 @@ import { Trophy, Star, Shield, Medal, Award } from 'lucide-react';
 export default function MyCourses() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [search, setSearch] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const heroRef = useRef(null);
   const cardsRef = useRef(null);
   const pointsRef = useRef(null);
 
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const data = await api.get('/courses');
+      // For learners, only show published courses
+      setCourses(data.filter(c => c.isPublished));
+    } catch (err) {
+      console.error("Failed to fetch courses:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    
     // Hero Text Stagger
     if (heroRef.current) {
       const chars = heroRef.current.querySelectorAll('.char');
@@ -31,20 +51,12 @@ export default function MyCourses() {
     // Cards Stagger
     if (cardsRef.current) {
       const cards = cardsRef.current.children;
-      gsap.fromTo(cards,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out', delay: 0.4 }
-      );
-      
-      // Progress bars
-      const bars = cardsRef.current.querySelectorAll('.progress-fill');
-      bars.forEach(bar => {
-        const target = bar.getAttribute('data-width');
-        gsap.fromTo(bar, 
-          { width: '0%' }, 
-          { width: target, duration: 1.5, ease: 'power2.out', delay: 0.8 }
+      if (cards.length > 0) {
+        gsap.fromTo(cards,
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out', delay: 0.4 }
         );
-      });
+      }
     }
 
     // Points Count Up
@@ -60,17 +72,26 @@ export default function MyCourses() {
         }
       });
     }
-  }, []);
+  }, [loading]);
 
   const splitText = "YOUR LEARNING JOURNEY".split('').map((char, i) => (
     <span key={i} className="char inline-block">{char === ' ' ? '\u00A0' : char}</span>
   ));
 
-  const filtered = MOCK_COURSES.filter(c => c.status === 'PUBLISHED' && c.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = courses.filter(c => 
+    c.title.toLowerCase().includes(search.toLowerCase()) || 
+    (c.tags && c.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase())))
+  );
 
   // Profile Data Mock
   const displayName = user?.username || user?.name || '';
   const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[#FB460D] border-t-transparent animate-spin"></div>
+    </div>
+  );
 
   return (
     <div className="bg-[#F5F0EB] min-h-screen pb-32">
@@ -103,6 +124,11 @@ export default function MyCourses() {
             {filtered.map((course, i) => (
               <CourseCard key={course.id} course={course} idx={i} navigate={navigate} />
             ))}
+            {filtered.length === 0 && (
+              <div className="col-span-full py-20 text-center">
+                <p className="text-[#8A817C] text-[14px]">No courses found matching your criteria.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -155,6 +181,7 @@ export default function MyCourses() {
 function CourseCard({ course, navigate, idx }) {
   const cardRef = useRef(null);
   const borderRef = useRef(null);
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   // Mock progress logic for UI presentation
   let progress = 0;
@@ -182,32 +209,34 @@ function CourseCard({ course, navigate, idx }) {
     <div className="relative pt-[2px] overflow-hidden group interactive cursor-pointer" onClick={handleClick} onMouseEnter={() => handleHover(true)} onMouseLeave={() => handleHover(false)}>
       <div ref={borderRef} className="absolute top-0 left-0 right-0 h-[2px] bg-[#FB460D] z-20" style={{ transform: 'translateY(-100%)' }}></div>
       <div ref={cardRef} className="bg-[#FFFFFF] border border-[#EAE4DD] rounded-none p-5 h-full flex flex-col relative z-10 w-full transform mt-[4px]">
-        <div className="h-40 mb-6 bg-gradient-to-br from-[#F5F0EB] to-[#EAE4DD] border border-[#EAE4DD]/50 relative">
-          <div className="absolute inset-0 bg-[#FB460D]/5mix-blend-overlay"></div>
+        <div className="h-40 mb-6 bg-[#F5F0EB] border border-[#EAE4DD]/50 relative overflow-hidden">
+          {course.imageUrl ? (
+            <img 
+              src={`${baseUrl}${course.imageUrl}`} 
+              alt={course.title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#F5F0EB] to-[#EAE4DD] flex items-center justify-center">
+              <span className="text-[#8A817C] text-[24px] font-bold tracking-tighter opacity-10">NOVA</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-[#FB460D]/5 mix-blend-overlay"></div>
         </div>
         
         <h3 className="text-[17px] font-semibold text-[#141314] mb-2 leading-tight">{course.title}</h3>
         <p className="text-[13px] text-[#8A817C] line-clamp-2 mb-4 flex-1">
-          Master the concepts required to build scalable modern web applications. Focus on architecture over syntax.
+          {course.description || "Master the concepts required to build scalable modern web applications. Focus on architecture over syntax."}
         </p>
 
-        <div className="flex space-x-2 mb-6">
-          <Badge variant="default" className="!text-[9px]">Frontend</Badge>
-          <Badge variant="default" className="!text-[9px]">Advanced</Badge>
+        <div className="flex flex-wrap gap-2 mb-6 min-h-[22px]">
+          {course.tags && course.tags.map(tag => (
+            <Badge key={tag} variant="default" className="!text-[9px] uppercase tracking-wider">{tag}</Badge>
+          ))}
+          {(!course.tags || course.tags.length === 0) && (
+            <Badge variant="default" className="!text-[9px] uppercase tracking-wider opacity-30">Course</Badge>
+          )}
         </div>
-
-        {/* Progress System inside Card */}
-        {btnState !== 'join' && (
-          <div className="mb-6">
-            <div className="flex justify-between text-[11px] font-bold tracking-widest text-[#8A817C] uppercase mb-2">
-              <span>Progress</span>
-              <span className={progress === 100 ? 'text-[#10B981]' : 'text-[#FB460D]'}>{progress}%</span>
-            </div>
-            <div className="w-full h-[2px] bg-[#EAE4DD]">
-              <div className="progress-fill h-full bg-[#FB460D]" data-width={`${progress}%`} style={{ width: '0%' }}></div>
-            </div>
-          </div>
-        )}
 
         {/* Action Button */}
         <div>

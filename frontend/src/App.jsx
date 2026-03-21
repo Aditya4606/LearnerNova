@@ -31,12 +31,17 @@ import LessonPlayer from './pages/learner/LessonPlayer';
 
 gsap.registerPlugin(ScrollTrigger);
 
+import { useLocation } from 'react-router-dom';
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  
   if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (user.role === 'SUPERADMIN') return <Navigate to="/superuser/dashboard" replace />;
     if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />;
     if (user.role === 'INSTRUCTOR') return <Navigate to="/admin/courses" replace />;
     return <Navigate to="/courses" replace />;
@@ -87,14 +92,14 @@ function App() {
             <Route path="/superuser/login" element={<SuperLogin />} />
             
             {/* SuperUser Routes */}
-            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['ADMIN']}><SuperUserLayout /></ProtectedRoute>}>
+            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['SUPERADMIN']}><SuperUserLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<Users />} />
               <Route path="users" element={<Users />} />
               <Route path="" element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR']}><AdminLayout /></ProtectedRoute>}>
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><AdminLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<Courses />} />
               <Route path="courses" element={<Courses />} />
               <Route path="courses/:id/edit" element={<CourseForm />} />
@@ -104,13 +109,16 @@ function App() {
             </Route>
             
             {/* Learner Routes */}
-            <Route path="/courses" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><LearnerLayout /></ProtectedRoute>}>
+            <Route path="/courses" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><LearnerLayout /></ProtectedRoute>}>
               <Route index element={<MyCourses />} />
               <Route path=":id" element={<CourseDetail />} />
             </Route>
+            <Route path="/course/:id" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><LearnerLayout /></ProtectedRoute>}>
+              <Route index element={<CourseDetail />} />
+            </Route>
 
             {/* Player Route */}
-            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><PlayerLayout /></ProtectedRoute>}>
+            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><PlayerLayout /></ProtectedRoute>}>
               <Route index element={<LessonPlayer />} />
             </Route>
             
