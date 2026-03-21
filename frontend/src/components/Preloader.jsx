@@ -43,14 +43,14 @@ export default function Preloader({ onComplete }) {
 
   return (
     <div ref={containerRef} className="fixed inset-0 z-[10000] flex pointer-events-none">
-      <div ref={leftHalfRef} className="w-1/2 h-full bg-[#141314]"></div>
-      <div ref={rightHalfRef} className="w-1/2 h-full bg-[#141314]"></div>
+      <div ref={leftHalfRef} className="w-1/2 h-full bg-[#F5F0EB]"></div>
+      <div ref={rightHalfRef} className="w-1/2 h-full bg-[#F5F0EB]"></div>
       
       <div 
         ref={textRef} 
         className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none space-y-4"
       >
-        <div className="text-[#F5F0EB] text-sm uppercase tracking-[0.2em] font-bold">
+        <div className="text-[#141314] text-sm uppercase tracking-[0.2em] font-bold">
           Learnova
         </div>
         <div className="text-[#FB460D] font-bold text-6xl">

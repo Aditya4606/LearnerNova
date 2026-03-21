@@ -33,16 +33,16 @@ export default function Login() {
     );
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const user = login(email, password);
-      // Route guard in App.jsx handles standard redirect but let's be explicit
-      if (user.role === 'superuser') navigate('/superuser/dashboard');
-      else if (user.role === 'admin') navigate('/admin/courses');
+      const user = await login(email, password);
+      if (user.role === 'ADMIN') navigate('/admin/dashboard');
+      else if (user.role === 'INSTRUCTOR') navigate('/admin/courses');
       else navigate('/courses');
-    } catch {
-      setError('Invalid credentials. Check mockData.js');
+    } catch (err) {
+      setError(err.message || 'Invalid credentials.');
     }
   };
 
@@ -53,31 +53,31 @@ export default function Login() {
   ));
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#141314]">
+    <div className="flex h-screen w-full overflow-hidden bg-[#F5F0EB]">
       <PageTransition />
       
       {/* Left Half Component */}
-      <div className="w-1/2 h-full bg-[#141314] relative p-12 flex flex-col justify-between hidden md:flex">
-        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#F5F0EB]">
+      <div className="w-1/2 h-full bg-[#F5F0EB] relative p-12 flex flex-col justify-between hidden md:flex">
+        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#141314]">
           LEARNOVA
         </div>
         
         <div ref={textContainer}>
-          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#F5F0EB] flex">
+          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#141314] flex">
             {splitText}
             <span className="text-[#FB460D] ml-4 char inline-block">/</span>
           </h1>
         </div>
         
-        <div className="pt-8 border-t border-[#2E2A2B] w-full max-w-md">
-          <Link to="/signup" className="text-[#6B6460] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
+        <div className="pt-8 border-t border-[#EAE4DD] w-full max-w-md">
+          <Link to="/signup" className="text-[#8A817C] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
             New here? Create an account →
           </Link>
         </div>
       </div>
 
       {/* Right Half Form */}
-      <div className="w-full md:w-1/2 h-full bg-[#1C1A1B] flex items-center justify-center p-8">
+      <div className="w-full md:w-1/2 h-full bg-[#FFFFFF] flex items-center justify-center p-8">
         <form onSubmit={handleLogin} className="w-full max-w-sm space-y-6" ref={formContainer}>
           <div className="mb-10">
             <h2 className="text-[10px] uppercase text-[#FB460D] tracking-[0.2em] font-bold">
@@ -107,7 +107,7 @@ export default function Login() {
           </div>
           
           <div className="text-center mt-6">
-            <a href="#" className="text-[12px] text-[#6B6460] hover:text-[#F5F0EB] transition-colors interactive">
+            <a href="#" className="text-[12px] text-[#8A817C] hover:text-[#141314] transition-colors interactive">
               Forgot password?
             </a>
           </div>

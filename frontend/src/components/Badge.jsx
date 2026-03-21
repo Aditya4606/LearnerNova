@@ -3,7 +3,7 @@ import React from 'react';
 export default function Badge({ children, variant = 'default', className = '' }) {
   const variantStyles = {
     default: "border-[#FB460D]/40 text-[#FB460D]",
-    muted: "border-[#6B6460] text-[#6B6460]",
+    muted: "border-[#8A817C] text-[#8A817C]",
     success: "border-[#10B981]/40 text-[#10B981]",
     warning: "border-[#F59E0B]/40 text-[#F59E0B]",
     danger: "border-[#EF4444]/40 text-[#EF4444]",

@@ -1,19 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
+import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import PageTransition from '../../components/PageTransition';
 import { Check } from 'lucide-react';
 
 export default function Signup() {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
   const [_success, setSuccess] = useState(false);
   
   const navigate = useNavigate();
+  const { signup } = useAuth();
   
   const textContainer = useRef(null);
   const formContainer = useRef(null);
@@ -33,20 +36,32 @@ export default function Signup() {
     );
   }, []);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setSuccess(true);
-    
-    // Animate form out and success in
-    gsap.to(formContainer.current, { opacity: 0, scale: 0.95, duration: 0.4, display: 'none' });
-    gsap.fromTo(successContainer.current, 
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.6, delay: 0.4, display: 'flex', ease: 'back.out(1.5)' }
-    );
+    setError('');
 
-    setTimeout(() => {
-      navigate('/login');
-    }, 2500);
+    if (password !== confirm) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      await signup(email, username, password);
+      setSuccess(true);
+    
+      // Animate form out and success in
+      gsap.to(formContainer.current, { opacity: 0, scale: 0.95, duration: 0.4, display: 'none' });
+      gsap.fromTo(successContainer.current, 
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.6, delay: 0.4, display: 'flex', ease: 'back.out(1.5)' }
+      );
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 2500);
+    } catch (err) {
+      setError(err.message || 'Signup failed.');
+    }
   };
 
   const rawText = "JOIN US";
@@ -55,31 +70,31 @@ export default function Signup() {
   ));
 
   return (
-    <div className="flex flex-row-reverse h-screen w-full overflow-hidden bg-[#141314]">
+    <div className="flex flex-row-reverse h-screen w-full overflow-hidden bg-[#F5F0EB]">
       <PageTransition />
       
       {/* Right Half Component (Mirrored Layout) */}
-      <div className="w-1/2 h-full bg-[#141314] relative p-12 flex flex-col justify-between hidden md:flex items-end text-right">
-        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#F5F0EB]">
+      <div className="w-1/2 h-full bg-[#F5F0EB] relative p-12 flex flex-col justify-between hidden md:flex items-end text-right">
+        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#141314]">
           LEARNOVA
         </div>
         
         <div ref={textContainer} className="flex justify-end relative">
           <div className="absolute -left-32 top-10 text-[#FB460D] text-[120px] font-bold char leading-none">+</div>
-          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#F5F0EB] flex">
+          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#141314] flex">
             {splitText}
           </h1>
         </div>
         
-        <div className="pt-8 border-t border-[#2E2A2B] w-full max-w-md text-right flex justify-end">
-          <Link to="/login" className="text-[#6B6460] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
+        <div className="pt-8 border-t border-[#EAE4DD] w-full max-w-md text-right flex justify-end">
+          <Link to="/login" className="text-[#8A817C] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
             ← ALREADY A MEMBER? LOGIN
           </Link>
         </div>
       </div>
 
       {/* Left Half Form */}
-      <div className="w-full md:w-1/2 h-full bg-[#1C1A1B] border-r border-[#2E2A2B] flex items-center justify-center p-8 relative">
+      <div className="w-full md:w-1/2 h-full bg-[#FFFFFF] border-r border-[#EAE4DD] flex items-center justify-center p-8 relative">
         <form onSubmit={handleSignup} className="w-full max-w-sm space-y-6" ref={formContainer}>
           <div className="mb-10">
             <h2 className="text-[10px] uppercase text-[#FB460D] tracking-[0.2em] font-bold">
@@ -87,10 +102,12 @@ export default function Signup() {
             </h2>
           </div>
           
-          <Input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} />
+          <Input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
           <Input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
           <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
           <Input type="password" placeholder="Confirm Password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+          
+          {error && <p className="text-[12px] text-[#FB460D]">{error}</p>}
           
           <div className="pt-4">
             <Button type="submit" className="w-full">
@@ -103,10 +120,10 @@ export default function Signup() {
           <div className="w-24 h-24 rounded-full border-2 border-[#FB460D] flex items-center justify-center mb-6">
             <Check size={40} className="text-[#FB460D]" />
           </div>
-          <h3 className="text-[24px] font-bold text-[#F5F0EB] uppercase tracking-wide">
+          <h3 className="text-[24px] font-bold text-[#141314] uppercase tracking-wide">
             You're In.
           </h3>
-          <p className="text-[12px] text-[#6B6460] mt-2 tracking-widest uppercase">
+          <p className="text-[12px] text-[#8A817C] mt-2 tracking-widest uppercase">
             Redirecting to login...
           </p>
         </div>

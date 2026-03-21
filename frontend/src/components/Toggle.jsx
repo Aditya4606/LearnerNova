@@ -11,7 +11,7 @@ export default function Toggle({ checked, onChange, disabled }) {
       gsap.to(trackRef.current, { backgroundColor: '#FB460D', duration: 0.3 });
     } else {
       gsap.to(thumbRef.current, { x: 2, duration: 0.3, ease: 'power2.out' });
-      gsap.to(trackRef.current, { backgroundColor: '#2E2A2B', duration: 0.3 });
+      gsap.to(trackRef.current, { backgroundColor: '#EAE4DD', duration: 0.3 });
     }
   }, [checked]);
 
@@ -20,7 +20,7 @@ export default function Toggle({ checked, onChange, disabled }) {
       ref={trackRef}
       onClick={() => !disabled && onChange(!checked)}
       className={`w-12 h-6 rounded-full relative cursor-pointer interactive ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-      style={{ backgroundColor: '#2E2A2B' }}
+      style={{ backgroundColor: '#EAE4DD' }}
     >
       <div 
         ref={thumbRef}
