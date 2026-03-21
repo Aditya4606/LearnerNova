@@ -9,7 +9,7 @@ export default function Input({ label, type = 'text', placeholder, value, onChan
   };
 
   const handleBlur = () => {
-    gsap.to(borderRef.current, { borderColor: '#2E2A2B', duration: 0.3 });
+    gsap.to(borderRef.current, { borderColor: '#EAE4DD', duration: 0.3 });
   };
 
   return (
@@ -23,7 +23,7 @@ export default function Input({ label, type = 'text', placeholder, value, onChan
         onFocus={handleFocus}
         onBlur={handleBlur}
         disabled={disabled}
-        className="bg-transparent border-0 border-b border-[#2E2A2B] text-[#F5F0EB] text-[15px] px-0 py-3 w-full outline-none interactive"
+        className="bg-transparent border-0 border-b border-[#EAE4DD] text-[#141314] text-[15px] px-0 py-3 w-full outline-none interactive"
         ref={borderRef}
       />
     </div>

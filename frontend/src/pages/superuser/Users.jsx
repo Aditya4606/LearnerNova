@@ -65,7 +65,7 @@ export default function Users() {
   const handleRowHover = (e, isHovering) => {
     const row = e.currentTarget;
     if (isHovering) {
-      gsap.to(row, { backgroundColor: '#1C1A1B', x: 4, duration: 0.2 });
+      gsap.to(row, { backgroundColor: '#FFFFFF', x: 4, duration: 0.2 });
     } else {
       gsap.to(row, { backgroundColor: 'transparent', x: 0, duration: 0.2 });
     }
@@ -96,26 +96,26 @@ export default function Users() {
   return (
     <div className="p-12 max-w-7xl mx-auto">
       <div className="relative mb-16">
-        <h1 className="text-[56px] font-bold text-[#F5F0EB] tracking-[-0.03em] relative z-10 uppercase">
+        <h1 className="text-[56px] font-bold text-[#141314] tracking-[-0.03em] relative z-10 uppercase">
           USER CONTROL
         </h1>
-        <div className="absolute -top-10 -left-6 text-[200px] font-bold text-[#2E2A2B]/30 leading-none select-none z-0">
+        <div className="absolute -top-10 -left-6 text-[200px] font-bold text-[#EAE4DD]/30 leading-none select-none z-0">
           01
         </div>
       </div>
 
-      <div ref={statsRef} className="flex border border-[#2E2A2B] bg-[#1C1A1B] mb-12">
-        <div className="flex-1 p-8 border-r border-[#2E2A2B]">
-          <p className="text-[10px] uppercase text-[#6B6460] tracking-widest mb-2">Total Users</p>
-          <p className="text-4xl font-bold text-[#F5F0EB] stat-number" data-target={totals.users}>0</p>
+      <div ref={statsRef} className="flex border border-[#EAE4DD] bg-[#FFFFFF] mb-12">
+        <div className="flex-1 p-8 border-r border-[#EAE4DD]">
+          <p className="text-[10px] uppercase text-[#8A817C] tracking-widest mb-2">Total Users</p>
+          <p className="text-4xl font-bold text-[#141314] stat-number" data-target={totals.users}>0</p>
         </div>
-        <div className="flex-1 p-8 border-r border-[#2E2A2B]">
-          <p className="text-[10px] uppercase text-[#6B6460] tracking-widest mb-2">Total Admins</p>
-          <p className="text-4xl font-bold text-[#F5F0EB] stat-number" data-target={totals.admins}>0</p>
+        <div className="flex-1 p-8 border-r border-[#EAE4DD]">
+          <p className="text-[10px] uppercase text-[#8A817C] tracking-widest mb-2">Total Admins</p>
+          <p className="text-4xl font-bold text-[#141314] stat-number" data-target={totals.admins}>0</p>
         </div>
         <div className="flex-1 p-8">
-          <p className="text-[10px] uppercase text-[#6B6460] tracking-widest mb-2">Total Learners</p>
-          <p className="text-4xl font-bold text-[#F5F0EB] stat-number" data-target={totals.learners}>0</p>
+          <p className="text-[10px] uppercase text-[#8A817C] tracking-widest mb-2">Total Learners</p>
+          <p className="text-4xl font-bold text-[#141314] stat-number" data-target={totals.learners}>0</p>
         </div>
       </div>
 
@@ -128,13 +128,13 @@ export default function Users() {
       </div>
 
       <div className="relative mb-6" ref={tabsRef}>
-        <div className="flex space-x-8 border-b border-[#2E2A2B] pb-4">
+        <div className="flex space-x-8 border-b border-[#EAE4DD] pb-4">
           {['ALL', 'LEARNERS', 'ADMINS'].map(tab => (
             <button 
               key={tab}
               ref={tab === 'ALL' ? initTabRef : null}
               onClick={(e) => handleTabClick(tab, e)}
-              className={`text-[11px] uppercase tracking-widest font-bold interactive ${filter === tab ? 'text-[#F5F0EB]' : 'text-[#6B6460]'}`}
+              className={`text-[11px] uppercase tracking-widest font-bold interactive ${filter === tab ? 'text-[#141314]' : 'text-[#8A817C]'}`}
             >
               {tab}
             </button>
@@ -145,7 +145,7 @@ export default function Users() {
 
       <div className="w-full">
         {/* Table Header */}
-        <div className="grid grid-cols-6 gap-4 py-4 border-b border-[#2E2A2B] text-[10px] uppercase tracking-widest text-[#6B6460] font-bold">
+        <div className="grid grid-cols-6 gap-4 py-4 border-b border-[#EAE4DD] text-[10px] uppercase tracking-widest text-[#8A817C] font-bold">
           <div className="col-span-1">#</div>
           <div className="col-span-1">NAME</div>
           <div className="col-span-2">EMAIL</div>
@@ -157,13 +157,13 @@ export default function Users() {
         {filteredUsers.map((u, i) => (
           <div 
             key={u.id}
-            className="user-row grid grid-cols-6 gap-4 py-6 border-b border-[#2E2A2B] items-center text-[13px] interactive transition-colors"
+            className="user-row grid grid-cols-6 gap-4 py-6 border-b border-[#EAE4DD] items-center text-[13px] interactive transition-colors"
             onMouseEnter={(e) => handleRowHover(e, true)}
             onMouseLeave={(e) => handleRowHover(e, false)}
           >
-            <div className="col-span-1 text-[#6B6460]">{(i + 1).toString().padStart(2, '0')}</div>
-            <div className="col-span-1 font-semibold text-[#F5F0EB]">{u.name}</div>
-            <div className="col-span-2 text-[#6B6460]">{u.email}</div>
+            <div className="col-span-1 text-[#8A817C]">{(i + 1).toString().padStart(2, '0')}</div>
+            <div className="col-span-1 font-semibold text-[#141314]">{u.name}</div>
+            <div className="col-span-2 text-[#8A817C]">{u.email}</div>
             <div className="col-span-1">
               {u.role === 'admin' ? (
                 <Badge variant="default">Admin</Badge>
@@ -193,7 +193,7 @@ export default function Users() {
       </div>
 
       <Modal isOpen={promoteModal.isOpen} onClose={() => setPromoteModal({ isOpen: false, user: null })}>
-        <h2 className="text-[28px] font-bold text-[#F5F0EB] uppercase mb-8 leading-tight">
+        <h2 className="text-[28px] font-bold text-[#141314] uppercase mb-8 leading-tight">
           PROMOTE {promoteModal.user?.name} TO ADMIN?
         </h2>
         <div className="flex space-x-4">

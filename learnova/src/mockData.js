@@ -1,6 +1,6 @@
 export const MOCK_USERS = [
   { id: 1, name: "Super Admin", email: "super@learnova.com", password: "super123", role: "superuser" },
-  { id: 2, name: "John Instructor", email: "a", password: "admin123", role: "admin" },
+  { id: 2, name: "John Instructor", email: "john@learnova.com", password: "admin123", role: "admin" },
   { id: 3, name: "Jane Learner", email: "jane@learnova.com", password: "learn123", role: "learner" }
 ];
 

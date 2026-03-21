@@ -49,12 +49,12 @@ export default function SuperLogin() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0D0B0C] flex flex-col items-center pt-32 px-4 relative">
+    <div className="min-h-screen w-full bg-[#141314] flex flex-col items-center pt-32 px-4 relative">
       <PageTransition />
       
       <div 
         ref={cardRef}
-        className="w-full max-w-md bg-[#1C1A1B] border border-[#FB460D]/20 p-16 shadow-2xl relative"
+        className="w-full max-w-md bg-[#FFFFFF] border border-[#FB460D]/20 p-16 shadow-2xl relative"
       >
         <div className="flex flex-col items-center mb-12 text-center">
           <div 
@@ -63,11 +63,11 @@ export default function SuperLogin() {
           >
             [RESTRICTED ACCESS]
           </div>
-          <h1 className="text-[18px] uppercase tracking-[0.3em] font-bold text-[#F5F0EB]">
+          <h1 className="text-[18px] uppercase tracking-[0.3em] font-bold text-[#141314]">
             LEARNOVA
           </h1>
-          <div className="w-12 h-[1px] bg-[#2E2A2B] my-4"></div>
-          <h2 className="text-[11px] tracking-widest uppercase text-[#6B6460]">
+          <div className="w-12 h-[1px] bg-[#EAE4DD] my-4"></div>
+          <h2 className="text-[11px] tracking-widest uppercase text-[#8A817C]">
             Super Admin
           </h2>
         </div>
