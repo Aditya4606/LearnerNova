@@ -139,7 +139,10 @@ export default function QuizPlayer() {
                </div>
                <div className="text-right">
                   <p className="text-[9px] uppercase font-black text-[#8A817C] tracking-widest">BEST SCORE</p>
-                  <p className="text-[14px] font-bold text-[#FB460D]">{Math.round((attemptsInfo.bestScore / questions.length) * 100)}%</p>
+                  <p className="text-[14px] font-bold text-[#FB460D]">
+                    {attemptsInfo.bestScore} PTS
+                    {attemptsInfo.bestAttempt ? ` (${Math.round((attemptsInfo.bestAttempt.score / attemptsInfo.bestAttempt.total) * 100)}%)` : ''}
+                  </p>
                </div>
             </div>
          </div>
@@ -181,7 +184,7 @@ export default function QuizPlayer() {
                           {isBest && <span className="text-[9px] font-black text-[#FB460D] bg-[#FB460D]/10 px-2 py-0.5 uppercase tracking-widest">BEST</span>}
                         </div>
                         <div className="flex items-center space-x-4">
-                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total}</span>
+                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total} PTS</span>
                           <span className={`text-[14px] font-bold ${isBest ? 'text-[#FB460D]' : 'text-[#141314]'}`}>{pct}%</span>
                         </div>
                       </div>
@@ -198,7 +201,7 @@ export default function QuizPlayer() {
             ) : (
               <div className="bg-white border border-[#EAE4DD] p-6 text-center max-w-sm">
                 <p className="text-[#FB460D] font-bold text-[14px] mb-2 uppercase tracking-wider">Maximum Attempts Reached</p>
-                <p className="text-[#8A817C] text-[12px]">Your best score of {Math.round((attemptsInfo.bestScore / questions.length) * 100)}% has been recorded.</p>
+                <p className="text-[#8A817C] text-[12px]">Your best score of {attemptsInfo.bestScore} points has been recorded.</p>
               </div>
             )}
          </div>
@@ -223,7 +226,7 @@ export default function QuizPlayer() {
               {passed ? "Assessment Passed" : "Keep Training"}
             </h2>
             <p className="text-[#8A817C] text-[11px] uppercase tracking-[0.2em] font-bold mb-12">
-              RESULT SCORE: {percentage}% ({lastResult.score}/{lastResult.total})
+              RESULT SCORE: {percentage}% ({lastResult.score}/{lastResult.total} PTS)
             </p>
 
             <div className="w-full bg-white border border-[#EAE4DD] p-8 mb-12 text-left">
@@ -267,7 +270,7 @@ export default function QuizPlayer() {
                           {isBest && <span className="text-[9px] font-black text-[#FB460D] bg-[#FB460D]/10 px-2 py-0.5 uppercase tracking-widest">BEST</span>}
                         </div>
                         <div className="flex items-center space-x-4">
-                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total}</span>
+                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total} PTS</span>
                           <span className={`text-[14px] font-bold ${isBest ? 'text-[#FB460D]' : 'text-[#141314]'}`}>{pct}%</span>
                         </div>
                       </div>

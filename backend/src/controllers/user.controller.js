@@ -23,7 +23,7 @@ export const getUsers = async (req, res) => {
 
 export const updateUserRole = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { role } = req.body;
 
     if (!['ADMIN', 'INSTRUCTOR', 'LEARNER'].includes(role)) {

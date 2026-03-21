@@ -179,34 +179,14 @@ export default function LessonModal({ isOpen, onClose, courseId, lesson, onSave 
               </div>
             </div>
 
-            {formData.type === 'VIDEO' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Input 
-                  label="VIDEO URL (YOUTUBE / DRIVE)" 
-                  placeholder="https://..." 
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="text-[#141314] border-[#EAE4DD]"
-                />
-                <div className="relative">
-                  <Input 
-                    label="DURATION (MM:SS)" 
-                    placeholder="05:30" 
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="text-[#141314] border-[#EAE4DD] pr-10"
-                  />
-                  <Clock size={16} className="absolute right-3 bottom-3 text-[#8A817C]" />
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex flex-col space-y-4">
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-8 border-2 border-dashed border-[#EAE4DD] flex flex-col items-center justify-center cursor-pointer hover:border-[#FB460D]/50 transition-colors group"
+                  className="p-8 h-full border-2 border-dashed border-[#EAE4DD] flex flex-col items-center justify-center cursor-pointer hover:border-[#FB460D]/50 transition-colors group"
                 >
                   <Upload size={24} className="text-[#8A817C] mb-2 group-hover:text-[#FB460D]" />
-                  <span className="text-[9px] font-bold text-[#141314] uppercase tracking-widest">
+                  <span className="text-[9px] font-bold text-[#141314] uppercase tracking-widest text-center">
                     {lessonFile ? lessonFile.name : `UPLOAD ${formData.type}`}
                   </span>
                   <input 
@@ -214,23 +194,45 @@ export default function LessonModal({ isOpen, onClose, courseId, lesson, onSave 
                     ref={fileInputRef} 
                     onChange={(e) => setLessonFile(e.target.files[0])}
                     className="hidden" 
-                    accept={formData.type === 'IMAGE' ? "image/*" : ".pdf,.doc,.docx"}
+                    accept={formData.type === 'IMAGE' ? "image/*" : formData.type === 'VIDEO' ? "video/*" : ".pdf,.doc,.docx"}
                   />
                 </div>
-                <div className="flex flex-col justify-center space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-[#EAE4DD] hover:border-[#FB460D]/30 transition-colors cursor-pointer" onClick={() => setFormData({ ...formData, allowDownload: !formData.allowDownload })}>
-                    <div className="flex items-center space-x-3">
-                      <Download size={18} className="text-[#FB460D]" />
-                      <div>
-                        <p className="text-[12px] font-bold text-[#141314] uppercase tracking-wider">Allow Download</p>
-                        <p className="text-[10px] text-[#8A817C]">Learners can save this file.</p>
-                      </div>
-                    </div>
-                    <Toggle checked={formData.allowDownload} onChange={(val) => setFormData({ ...formData, allowDownload: val })} />
+              </div>
+
+              <div className="flex flex-col space-y-4">
+                <Input 
+                  label={`OR PASTE ${formData.type} URL`} 
+                  placeholder="https://..." 
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="text-[#141314] border-[#EAE4DD]"
+                />
+                
+                {formData.type === 'VIDEO' && (
+                  <div className="relative">
+                    <Input 
+                      label="DURATION (MM:SS)" 
+                      placeholder="05:30" 
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      className="text-[#141314] border-[#EAE4DD] pr-10"
+                    />
+                    <Clock size={16} className="absolute right-3 bottom-3 text-[#8A817C]" />
                   </div>
+                )}
+
+                <div className="flex items-center justify-between p-4 border border-[#EAE4DD] hover:border-[#FB460D]/30 transition-colors cursor-pointer" onClick={() => setFormData({ ...formData, allowDownload: !formData.allowDownload })}>
+                  <div className="flex items-center space-x-3">
+                    <Download size={18} className="text-[#FB460D]" />
+                    <div>
+                      <p className="text-[12px] font-bold text-[#141314] uppercase tracking-wider">Allow Download</p>
+                      <p className="text-[10px] text-[#8A817C]">Learners can save this file.</p>
+                    </div>
+                  </div>
+                  <Toggle checked={formData.allowDownload} onChange={(val) => setFormData({ ...formData, allowDownload: val })} />
                 </div>
               </div>
-            )}
+            </div>
             
             <Input 
               label="RESPONSIBLE (OPTIONAL)" 
