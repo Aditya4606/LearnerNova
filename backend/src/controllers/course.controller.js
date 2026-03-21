@@ -91,7 +91,8 @@ export const getCourseById = async (req, res) => {
       include: {
         instructor: { select: { username: true, id: true } },
         lessons: {
-          orderBy: { order: 'asc' }
+          orderBy: { order: 'asc' },
+          include: { attachments: true }
         },
         quizzes: {
           include: {

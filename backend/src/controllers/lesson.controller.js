@@ -127,3 +127,38 @@ export const deleteAttachment = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const markLessonComplete = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lesson = await prisma.lesson.findUnique({ where: { id } });
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+    const updatedLesson = await prisma.lesson.update({
+      where: { id },
+      data: { status: 'completed' }
+    });
+
+    // Recalculate course progress for the user's enrollment
+    const { id: userId } = req.user;
+    const allLessons = await prisma.lesson.findMany({ where: { courseId: lesson.courseId } });
+    const completedCount = allLessons.filter(l => l.id === id ? true : l.status === 'completed').length;
+    const progressPercent = Math.round((completedCount / allLessons.length) * 100);
+
+    // Update enrollment progress if user is enrolled
+    await prisma.enrollment.updateMany({
+      where: { userId, courseId: lesson.courseId },
+      data: { 
+        progress: progressPercent,
+        status: progressPercent >= 100 ? 'completed' : 'in_progress',
+        ...(progressPercent >= 100 ? { completedAt: new Date() } : {}),
+        ...(progressPercent > 0 ? { startedAt: new Date() } : {})
+      }
+    });
+
+    res.json({ lesson: updatedLesson, progress: progressPercent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

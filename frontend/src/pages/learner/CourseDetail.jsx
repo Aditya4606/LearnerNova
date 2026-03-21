@@ -5,7 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
-import { CheckCircle2, Circle, Download, Link as LinkIcon, Play } from 'lucide-react';
+import { CheckCircle2, Circle, Download, Link as LinkIcon, Play, Search, BookOpen, Clock } from 'lucide-react';
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -13,6 +13,7 @@ export default function CourseDetail() {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('OVERVIEW');
@@ -112,11 +113,25 @@ export default function CourseDetail() {
   const lessons = course.lessons || [];
   const quizzes = course.quizzes || [];
 
+  // Compute lesson stats
+  const completedLessons = lessons.filter(l => l.status === 'completed').length;
+  const inProgressLessons = lessons.filter(l => l.status === 'in-progress').length;
+  const incompleteLessons = lessons.length - completedLessons;
+  const progressPercent = lessons.length > 0 ? Math.round((completedLessons / lessons.length) * 100) : 0;
+
+  // Filter lessons by search
+  const filteredLessons = searchQuery.trim()
+    ? lessons.filter(l => l.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : lessons;
+
   const safeReviews = Array.isArray(reviews) ? reviews : [];
   const hasReviewed = safeReviews.some(r => r.userId === user?.id);
   const averageRating = safeReviews.length > 0 
     ? (safeReviews.reduce((acc, r) => acc + (r.rating || 0), 0) / safeReviews.length).toFixed(1)
     : '0.0';
+
+  // Find first incomplete lesson to resume
+  const resumeLesson = lessons.find(l => l.status === 'in-progress') || lessons.find(l => l.status !== 'completed') || lessons[0];
 
   return (
     <div className="bg-[#F5F0EB] min-h-screen pb-32">
@@ -148,7 +163,7 @@ export default function CourseDetail() {
               {course.description || "Dive deep into component architecture, state management patterns, and performance optimizations. This course distills hundreds of hours of production experience into an actionable learning path."}
             </p>
             <div className="flex items-center space-x-6 text-[12px] uppercase font-bold text-[#8A817C] tracking-widest border-t border-[#EAE4DD] pt-6 flex-wrap gap-y-4">
-              <span>{course.lessonsCount || 0} LESSONS</span>
+              <span>{course.lessonsCount || lessons.length} LESSONS</span>
               <span>{course.duration || 'TBD'} TOTAL</span>
               <span>{course.views || 0} VIEWS</span>
               {course.instructor && <span className="text-[#FB460D]">BY {course.instructor.username}</span>}
@@ -159,20 +174,42 @@ export default function CourseDetail() {
 
       <div className="max-w-4xl mx-auto mt-16 px-8">
         
-        <div className="mb-12 border border-[#EAE4DD] bg-[#FFFFFF] p-8 flex items-center justify-between">
-          <div className="flex-1 mr-12">
-            <div className="flex justify-between text-[11px] font-bold tracking-widest text-[#8A817C] uppercase mb-3">
-              <span>Overall Progress</span>
-              <span className="text-[#FB460D]">0%</span>
+        {/* Progress & Stats Block */}
+        <div className="mb-12 border border-[#EAE4DD] bg-[#FFFFFF] p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex-1 mr-12">
+              <div className="flex justify-between text-[11px] font-bold tracking-widest text-[#8A817C] uppercase mb-3">
+                <span>Overall Progress</span>
+                <span className="text-[#FB460D]">{progressPercent}%</span>
+              </div>
+              <div className="w-full h-[6px] bg-[#EAE4DD] rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#FB460D] to-[#FF7B54] rounded-full transition-all duration-700"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full h-[4px] bg-[#EAE4DD]">
-              <div className="h-full bg-[#FB460D] w-[0%]"></div>
+            <div>
+              <Button onClick={() => resumeLesson ? navigate(`/courses/${course.id}/lesson/${resumeLesson.id}`) : null} disabled={lessons.length === 0}>
+                {completedLessons > 0 && completedLessons < lessons.length ? "CONTINUE LEARNING" : lessons.length > 0 ? "START LEARNING" : "NO LESSONS YET"}
+              </Button>
             </div>
           </div>
-          <div>
-            <Button onClick={() => lessons.length > 0 ? navigate(`/courses/${course.id}/lesson/${lessons[0].id}`) : null} disabled={lessons.length === 0}>
-              {lessons.length > 0 ? "START LEARNING" : "NO LESSONS YET"}
-            </Button>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-3 gap-4 border-t border-[#EAE4DD] pt-6">
+            <div className="text-center border-r border-[#EAE4DD]">
+              <p className="text-[24px] font-bold text-[#141314]">{lessons.length}</p>
+              <p className="text-[9px] font-bold text-[#8A817C] uppercase tracking-widest mt-1">Total Lessons</p>
+            </div>
+            <div className="text-center border-r border-[#EAE4DD]">
+              <p className="text-[24px] font-bold text-[#10B981]">{completedLessons}</p>
+              <p className="text-[9px] font-bold text-[#8A817C] uppercase tracking-widest mt-1">Completed</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[24px] font-bold text-[#FB460D]">{incompleteLessons}</p>
+              <p className="text-[9px] font-bold text-[#8A817C] uppercase tracking-widest mt-1">Remaining</p>
+            </div>
           </div>
         </div>
 
@@ -196,10 +233,24 @@ export default function CourseDetail() {
         {/* Overview Tab Content */}
         {activeTab === 'OVERVIEW' && (
           <div className="space-y-0 border border-[#EAE4DD] bg-[#FFFFFF]">
-            <div className="bg-[#F5F0EB]/30 p-4 border-b border-[#EAE4DD]">
+            {/* Header with Search */}
+            <div className="bg-[#F5F0EB]/30 p-4 border-b border-[#EAE4DD] flex items-center justify-between">
               <h3 className="text-[10px] uppercase tracking-widest font-black text-[#8A817C]">Curriculum — {lessons.length} Modules</h3>
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A817C]" />
+                <input 
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search lessons..."
+                  className="pl-9 pr-4 py-2 text-[12px] bg-white border border-[#EAE4DD] focus:border-[#FB460D] outline-none transition-colors w-56"
+                />
+              </div>
             </div>
-            {lessons.length > 0 ? lessons.map((lesson, idx) => (
+
+            {filteredLessons.length > 0 ? filteredLessons.map((lesson, idx) => {
+              const originalIdx = lessons.findIndex(l => l.id === lesson.id);
+              return (
               <div key={lesson.id} className="border-b border-[#EAE4DD] last:border-0">
                 <div 
                   onClick={() => setExpandedLessonId(expandedLessonId === lesson.id ? null : lesson.id)}
@@ -207,7 +258,7 @@ export default function CourseDetail() {
                 >
                   <div className="flex items-center space-x-6">
                     <div className="text-[12px] font-bold text-[#8A817C] font-mono group-hover:text-[#FB460D] transition-colors">
-                      {(idx + 1).toString().padStart(2, '0')}
+                      {(originalIdx + 1).toString().padStart(2, '0')}
                     </div>
                     <div>
                       <h3 className="text-[15px] font-bold text-[#141314]">{lesson.title}</h3>
@@ -224,10 +275,23 @@ export default function CourseDetail() {
                   </div>
                   
                   <div className="flex items-center space-x-4">
-                    {lesson.status === 'completed' && <CheckCircle2 size={20} className="text-[#10B981]" />}
-                    <div className={`transform transition-transform duration-300 ${expandedLessonId === lesson.id ? 'rotate-180' : ''}`}>
-                      <Circle size={20} className="text-[#8A817C]" />
-                    </div>
+                    {lesson.status === 'completed' && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[9px] font-bold text-[#10B981] uppercase tracking-widest">Done</span>
+                        <CheckCircle2 size={20} className="text-[#3B82F6]" />
+                      </div>
+                    )}
+                    {lesson.status === 'in-progress' && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[9px] font-bold text-[#FB460D] uppercase tracking-widest">In Progress</span>
+                        <div className="w-5 h-5 rounded-full border-2 border-[#FB460D] flex items-center justify-center">
+                          <Play size={10} className="text-[#FB460D] ml-0.5" />
+                        </div>
+                      </div>
+                    )}
+                    {(!lesson.status || lesson.status === 'not-started') && (
+                      <Circle size={20} className="text-[#EAE4DD]" />
+                    )}
                   </div>
                 </div>
 
@@ -273,9 +337,12 @@ export default function CourseDetail() {
                   </div>
                 )}
               </div>
-            )) : (
+              );
+            }) : (
               <div className="p-12 text-center border-b border-[#EAE4DD]">
-                <p className="text-[12px] font-bold text-[#8A817C] uppercase tracking-widest">The curriculum is currently being architected.</p>
+                <p className="text-[12px] font-bold text-[#8A817C] uppercase tracking-widest">
+                  {searchQuery ? `No lessons matching "${searchQuery}"` : 'The curriculum is currently being architected.'}
+                </p>
               </div>
             )}
 
@@ -316,7 +383,14 @@ export default function CourseDetail() {
             <div className="flex items-end justify-between mb-12">
               <div className="flex items-baseline space-x-4">
                 <span className="text-[64px] font-[800] text-[#FB460D] leading-none tracking-tighter">{averageRating}</span>
-                <span className="text-[12px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">OUT OF 5 · {safeReviews.length} REVIEWS</span>
+                <div>
+                  <div className="flex space-x-1 mb-1">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={`text-[16px] ${i < Math.round(parseFloat(averageRating)) ? 'text-[#FB460D]' : 'text-[#EAE4DD]'}`}>★</span>
+                    ))}
+                  </div>
+                  <span className="text-[12px] font-bold text-[#8A817C] tracking-widest uppercase">OUT OF 5 · {safeReviews.length} REVIEWS</span>
+                </div>
               </div>
               {!hasReviewed && (
                 <Button variant="ghost" onClick={() => setShowReviewForm(!showReviewForm)}>
@@ -334,14 +408,18 @@ export default function CourseDetail() {
                   </div>
                 )}
                 <div className="mb-6">
-                  <label className="block text-[10px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">Rating</label>
-                  <select 
-                    value={reviewRating} 
-                    onChange={e => setReviewRating(Number(e.target.value))}
-                    className="w-full border border-[#EAE4DD] p-3 text-[14px] bg-transparent focus:outline-none focus:border-[#FB460D] transition-colors"
-                  >
-                    {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} Stars</option>)}
-                  </select>
+                  <label className="block text-[10px] font-bold text-[#8A817C] tracking-widest uppercase mb-3">Your Rating</label>
+                  <div className="flex space-x-2">
+                    {[1,2,3,4,5].map(n => (
+                      <button 
+                        key={n} 
+                        onClick={() => setReviewRating(n)} 
+                        className={`w-12 h-12 border-2 text-[18px] font-bold transition-all ${n <= reviewRating ? 'border-[#FB460D] bg-[#FB460D] text-white' : 'border-[#EAE4DD] text-[#8A817C] hover:border-[#FB460D]/40'}`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="mb-8">
                   <label className="block text-[10px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">Comment (Optional)</label>

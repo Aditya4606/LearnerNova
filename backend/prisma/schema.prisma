@@ -19,6 +19,7 @@ model User {
   coursesCreated Course[]     @relation("InstructorCourses")
   enrollments    Enrollment[]
   reviews        Review[]
+  quizAttempts   QuizAttempt[]
 }
 
 model Course {
@@ -80,9 +81,10 @@ model Quiz {
   courseId  String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
-  rewards   Json?      
-  questions Question[]
-  course    Course     @relation(fields: [courseId], references: [id])
+  rewards      Json?      
+  questions    Question[]
+  attempts     QuizAttempt[]
+  course       Course     @relation(fields: [courseId], references: [id])
 }
 
 model Question {
@@ -128,4 +130,24 @@ model Review {
   course    Course   @relation(fields: [courseId], references: [id])
 
   @@unique([userId, courseId])
+}
+
+model QuizAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  quizId    String
+  score     Int
+  total     Int
+  attemptNo Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+}
+
+model PasswordOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

@@ -12,30 +12,36 @@ export default function QuizPlayer() {
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attemptsInfo, setAttemptsInfo] = useState({ attempts: [], bestScore: 0, maxAttempts: 4 });
   
   // Quiz State
   const [currentIdx, setCurrentIdx] = useState(-1); // -1 is Intro screen
   const [selectedOption, setSelectedOption] = useState(null);
   const [answers, setAnswers] = useState([]);
-  const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastResult, setLastResult] = useState(null);
   
   const contentRef = useRef(null);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [quizData, attemptsData] = await Promise.all([
+        api.get(`/quizzes/${quizId}`),
+        api.get(`/quizzes/${quizId}/attempts`)
+      ]);
+      setQuiz(quizData);
+      setAttemptsInfo(attemptsData);
+    } catch (err) {
+      setError(err.message || 'Failed to load quiz');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchQuiz = async () => {
-      try {
-        setLoading(true);
-        const data = await api.get(`/quizzes/${quizId}`);
-        setQuiz(data);
-      } catch (err) {
-        setError(err.message || 'Failed to load quiz');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuiz();
+    fetchData();
   }, [quizId]);
 
   useEffect(() => {
@@ -48,36 +54,49 @@ export default function QuizPlayer() {
   }, [currentIdx, isFinished]);
 
   const handleStart = () => {
+    if (attemptsInfo.attempts.length >= attemptsInfo.maxAttempts) {
+      alert("Maximum attempts reached for this assessment.");
+      return;
+    }
     setCurrentIdx(0);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedOption === null) return;
     
     const question = quiz.questions[currentIdx];
-    const isCorrect = selectedOption === question.answer;
-    
-    const newAnswers = [...answers, { questionId: question.id, selected: selectedOption, isCorrect }];
+    const newAnswers = [...answers, { questionId: question.id, selectedOption }];
     setAnswers(newAnswers);
     
-    if (isCorrect) setScore(score + 1);
-    
     setSelectedOption(null);
-    setShowFeedback(false);
 
     if (currentIdx < quiz.questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setIsFinished(true);
+      // Last question - Submit!
+      try {
+        setIsSubmitting(true);
+        const result = await api.post(`/quizzes/${quizId}/submit`, { answers: newAnswers });
+        setLastResult(result);
+        setIsFinished(true);
+        // Refresh attempts info
+        const updatedAttempts = await api.get(`/quizzes/${quizId}/attempts`);
+        setAttemptsInfo(updatedAttempts);
+      } catch (err) {
+        setError(err.message || 'Failed to submit quiz');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
   const restartQuiz = () => {
+    if (attemptsInfo.attempts.length >= attemptsInfo.maxAttempts) return;
     setCurrentIdx(-1);
-    setScore(0);
     setAnswers([]);
     setSelectedOption(null);
     setIsFinished(false);
+    setLastResult(null);
   };
 
   if (loading) return (
@@ -98,19 +117,31 @@ export default function QuizPlayer() {
   );
 
   const questions = quiz.questions || [];
+  const currentAttempts = attemptsInfo.attempts.length;
+  const maxAttempts = attemptsInfo.maxAttempts;
 
   // Intro Screen
   if (currentIdx === -1) {
     return (
       <div className="flex-1 flex flex-col bg-[#F5F0EB]" ref={contentRef}>
          {/* Top Bar Navigation */}
-         <div className="h-[72px] bg-[#FFFFFF] border-b border-[#EAE4DD] px-8 flex items-center">
+         <div className="h-[72px] bg-[#FFFFFF] border-b border-[#EAE4DD] px-8 flex items-center justify-between">
             <button 
               className="text-[10px] font-bold text-[#8A817C] hover:text-[#FB460D] uppercase tracking-widest flex items-center transition-colors"
               onClick={() => navigate(`/courses/${courseId}`)}
             >
               ← BACK TO COURSE
             </button>
+            <div className="flex items-center space-x-6">
+               <div className="text-right">
+                  <p className="text-[9px] uppercase font-black text-[#8A817C] tracking-widest">ATTEMPTS USED</p>
+                  <p className="text-[14px] font-bold text-[#141314]">{currentAttempts}/{maxAttempts}</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[9px] uppercase font-black text-[#8A817C] tracking-widest">BEST SCORE</p>
+                  <p className="text-[14px] font-bold text-[#FB460D]">{Math.round((attemptsInfo.bestScore / questions.length) * 100)}%</p>
+               </div>
+            </div>
          </div>
 
          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-2xl mx-auto">
@@ -135,18 +166,51 @@ export default function QuizPlayer() {
               </div>
             </div>
 
-            <Button onClick={handleStart} className="!px-16 !py-5 text-[14px] tracking-[0.1em]">
-              START ASSESSMENT →
-            </Button>
+            {/* Previous Attempts Scoreboard */}
+            {attemptsInfo.attempts.length > 0 && (
+              <div className="w-full bg-white border border-[#EAE4DD] p-6 mb-12">
+                <h4 className="text-[10px] font-black uppercase text-[#8A817C] tracking-widest mb-4">PREVIOUS ATTEMPTS</h4>
+                <div className="space-y-2">
+                  {[...attemptsInfo.attempts].reverse().map((a) => {
+                    const pct = Math.round((a.score / a.total) * 100);
+                    const isBest = a.score === attemptsInfo.bestScore;
+                    return (
+                      <div key={a.id} className={`flex items-center justify-between p-3 border ${isBest ? 'border-[#FB460D] bg-[#FB460D]/5' : 'border-[#EAE4DD]'}`}>
+                        <div className="flex items-center space-x-3">
+                          <span className={`text-[11px] font-bold uppercase tracking-wider ${isBest ? 'text-[#FB460D]' : 'text-[#8A817C]'}`}>Round {a.attemptNo}</span>
+                          {isBest && <span className="text-[9px] font-black text-[#FB460D] bg-[#FB460D]/10 px-2 py-0.5 uppercase tracking-widest">BEST</span>}
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total}</span>
+                          <span className={`text-[14px] font-bold ${isBest ? 'text-[#FB460D]' : 'text-[#141314]'}`}>{pct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {currentAttempts < maxAttempts ? (
+              <Button onClick={handleStart} className="!px-16 !py-5 text-[14px] tracking-[0.1em]">
+                {currentAttempts > 0 ? 'RETAKE ASSESSMENT →' : 'START ASSESSMENT →'}
+              </Button>
+            ) : (
+              <div className="bg-white border border-[#EAE4DD] p-6 text-center max-w-sm">
+                <p className="text-[#FB460D] font-bold text-[14px] mb-2 uppercase tracking-wider">Maximum Attempts Reached</p>
+                <p className="text-[#8A817C] text-[12px]">Your best score of {Math.round((attemptsInfo.bestScore / questions.length) * 100)}% has been recorded.</p>
+              </div>
+            )}
          </div>
       </div>
     );
   }
 
   // Result Screen
-  if (isFinished) {
-    const percentage = Math.round((score / questions.length) * 100);
+  if (isFinished && lastResult) {
+    const percentage = Math.round((lastResult.score / lastResult.total) * 100);
     const passed = percentage >= 80;
+    const remaining = lastResult.remainingAttempts;
 
     return (
       <div className="flex-1 flex flex-col bg-[#F5F0EB]" ref={contentRef}>
@@ -159,31 +223,69 @@ export default function QuizPlayer() {
               {passed ? "Assessment Passed" : "Keep Training"}
             </h2>
             <p className="text-[#8A817C] text-[11px] uppercase tracking-[0.2em] font-bold mb-12">
-              RESULT SCORE: {percentage}% ({score}/{questions.length})
+              RESULT SCORE: {percentage}% ({lastResult.score}/{lastResult.total})
             </p>
 
             <div className="w-full bg-white border border-[#EAE4DD] p-8 mb-12 text-left">
-              <h4 className="text-[10px] font-black uppercase text-[#8A817C] tracking-widest mb-6 border-b border-[#EAE4DD] pb-4">UNLOCKED REWARDS</h4>
-              {passed ? (
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-green-500 text-white rounded flex items-center justify-center font-bold text-[18px]">★</div>
-                  <div>
-                     <p className="text-[14px] font-bold text-[#141314]">Course Excellence Badge</p>
-                     <p className="text-[11px] text-[#8A817C]">Attribute added to your profile intelligence.</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[13px] text-[#8A817C] italic">Achieve 80% or higher to unlock module specific rewards.</p>
-              )}
+              <div className="grid grid-cols-2 gap-8">
+                 <div>
+                    <h4 className="text-[10px] font-black uppercase text-[#8A817C] tracking-widest mb-4">UNLOCKED REWARDS</h4>
+                    {passed ? (
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-green-500 text-white rounded flex items-center justify-center font-bold text-[18px]">★</div>
+                        <div>
+                           <p className="text-[13px] font-bold text-[#141314]">Module Mastery</p>
+                           <p className="text-[10px] text-[#8A817C]">Badge verified.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[12px] text-[#8A817C] italic">Achieve 80% to unlock rewards.</p>
+                    )}
+                 </div>
+                 <div className="border-l border-[#EAE4DD] pl-8">
+                    <h4 className="text-[10px] font-black uppercase text-[#8A817C] tracking-widest mb-4">ATTEMPT STATUS</h4>
+                    <p className="text-[13px] font-bold text-[#141314]">Attempt {lastResult.attemptNo} of 4</p>
+                    <p className="text-[11px] text-[#8A817C] mt-1">
+                      {remaining > 0 ? `${remaining} attempt${remaining > 1 ? 's' : ''} remaining.` : 'Final attempt completed.'}
+                    </p>
+                 </div>
+              </div>
             </div>
+
+            {/* All Attempts Scoreboard */}
+            {attemptsInfo.attempts.length > 0 && (
+              <div className="w-full bg-white border border-[#EAE4DD] p-6 mb-12">
+                <h4 className="text-[10px] font-black uppercase text-[#8A817C] tracking-widest mb-4">ALL ATTEMPTS</h4>
+                <div className="space-y-2">
+                  {[...attemptsInfo.attempts].reverse().map((a) => {
+                    const pct = Math.round((a.score / a.total) * 100);
+                    const isBest = a.score === attemptsInfo.bestScore;
+                    return (
+                      <div key={a.id} className={`flex items-center justify-between p-3 border ${isBest ? 'border-[#FB460D] bg-[#FB460D]/5' : 'border-[#EAE4DD]'}`}>
+                        <div className="flex items-center space-x-3">
+                          <span className={`text-[11px] font-bold uppercase tracking-wider ${isBest ? 'text-[#FB460D]' : 'text-[#8A817C]'}`}>Round {a.attemptNo}</span>
+                          {isBest && <span className="text-[9px] font-black text-[#FB460D] bg-[#FB460D]/10 px-2 py-0.5 uppercase tracking-widest">BEST</span>}
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <span className="text-[12px] text-[#8A817C]">{a.score}/{a.total}</span>
+                          <span className={`text-[14px] font-bold ${isBest ? 'text-[#FB460D]' : 'text-[#141314]'}`}>{pct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 w-full">
               <Button className="flex-1" onClick={() => navigate(`/courses/${courseId}`)}>
                 CONTINUE COURSE
               </Button>
-              <Button variant="ghost" className="flex-1" onClick={restartQuiz}>
-                <RefreshCw size={14} className="mr-2" /> RETAKE ASSESSMENT
-              </Button>
+              {remaining > 0 && (
+                <Button variant="outline" className="flex-1" onClick={restartQuiz}>
+                   <RefreshCw size={14} className="mr-2" /> RETAKE ASSESSMENT
+                </Button>
+              )}
             </div>
          </div>
       </div>
@@ -226,6 +328,7 @@ export default function QuizPlayer() {
               return (
                 <button
                   key={i}
+                  disabled={isSubmitting}
                   onClick={() => setSelectedOption(i)}
                   className={`w-full text-left flex items-stretch border transition-all duration-200 group ${
                     isSelected 
@@ -256,11 +359,15 @@ export default function QuizPlayer() {
                 <AlertCircle size={14} className="mr-2" /> Select the most architecturally sound answer
              </div>
              <Button 
-               disabled={selectedOption === null}
+               disabled={selectedOption === null || isSubmitting}
                onClick={handleNext}
                className="!px-12"
              >
-               NEXT QUESTION <ChevronRight size={14} className="ml-2" />
+               {currentIdx < questions.length - 1 ? (
+                 <>NEXT QUESTION <ChevronRight size={14} className="ml-2" /></>
+               ) : (
+                 <>{isSubmitting ? 'SUBMITTING...' : 'FINISH ASSESSMENT'}</>
+               )}
              </Button>
           </div>
         </div>

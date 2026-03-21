@@ -63,12 +63,12 @@ export default function Cursor() {
     <>
       <div 
         ref={ringRef} 
-        className="fixed top-0 left-0 w-10 h-10 border border-[#FB460D] rounded-full pointer-events-none z-[9999]"
+        className="fixed top-0 left-0 w-10 h-10 border border-[#FB460D] rounded-full pointer-events-none z-[99999]"
         style={{ transform: 'translate(-50%, -50%)' }}
       ></div>
       <div 
         ref={dotRef} 
-        className="fixed top-0 left-0 w-3 h-3 bg-[#FB460D] rounded-full pointer-events-none z-[9999]"
+        className="fixed top-0 left-0 w-3 h-3 bg-[#FB460D] rounded-full pointer-events-none z-[99999]"
         style={{ transform: 'translate(-50%, -50%)' }}
       ></div>
     </>

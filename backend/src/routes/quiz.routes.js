@@ -8,6 +8,8 @@ import {
   addQuestion,
   updateQuestion,
   deleteQuestion,
+  submitQuiz,
+  getQuizAttempts,
 } from "../controllers/quiz.controller.js";
 import { protect, isAdmin } from "../middlewares/authmiddleware.js";
 
@@ -15,6 +17,8 @@ const router = express.Router();
 
 router.get("/course/:courseId", protect, getQuizzesByCourse);
 router.get("/:id", protect, getQuizById);
+router.post("/:id/submit", protect, submitQuiz);
+router.get("/:id/attempts", protect, getQuizAttempts);
 router.post("/", protect, isAdmin, createQuiz);
 router.put("/:id", protect, isAdmin, updateQuiz);
 router.delete("/:id", protect, isAdmin, deleteQuiz);

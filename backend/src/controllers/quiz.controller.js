@@ -108,3 +108,81 @@ export const deleteQuestion = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const submitQuiz = async (req, res) => {
+  try {
+    const { id: quizId } = req.params;
+    const { answers } = req.body; // Array of { questionId, selectedOption }
+    const { id: userId } = req.user;
+
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { questions: true },
+    });
+
+    if (!quiz) return res.status(404).json({ message: "Quiz not found" });
+
+    // Check attempt limit
+    const attemptsCount = await prisma.quizAttempt.count({
+      where: { userId, quizId },
+    });
+
+    if (attemptsCount >= 4) {
+      return res.status(400).json({ message: "Maximum 4 attempts allowed for this quiz" });
+    }
+
+    // Calculate score
+    let score = 0;
+    const total = quiz.questions.length;
+    
+    quiz.questions.forEach(q => {
+      const userAnswer = answers.find(a => a.questionId === q.id);
+      if (userAnswer && userAnswer.selectedOption === q.answer) {
+        score++;
+      }
+    });
+
+    // Save attempt
+    const attempt = await prisma.quizAttempt.create({
+      data: {
+        userId,
+        quizId,
+        score,
+        total,
+        attemptNo: attemptsCount + 1,
+      }
+    });
+
+    // Update enrollment progress (optional, if quiz completion counts towards course progress)
+    // For now, let's just return the result
+    res.json({ 
+      score, 
+      total, 
+      attemptNo: attempt.attemptNo, 
+      remainingAttempts: 4 - (attemptsCount + 1) 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getQuizAttempts = async (req, res) => {
+  try {
+    const { id: quizId } = req.params;
+    const { id: userId } = req.user;
+
+    const attempts = await prisma.quizAttempt.findMany({
+      where: { userId, quizId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const bestScore = attempts.length > 0 
+      ? Math.max(...attempts.map(a => a.score)) 
+      : 0;
+
+    res.json({ attempts, bestScore, maxAttempts: 4 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
