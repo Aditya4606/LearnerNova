@@ -29,7 +29,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
   return (
     <div 
       ref={overlayRef}
-      className="fixed inset-0 z-[5000] hidden items-center justify-center bg-[#141314]/90 backdrop-blur"
+      className="fixed inset-0 z-[5000] hidden items-center justify-center bg-[#F5F0EB]/90 backdrop-blur"
       style={{ opacity: 0 }}
     >
       {/* Background click listener */}
@@ -37,10 +37,10 @@ export default function Modal({ isOpen, onClose, title, children }) {
       
       <div 
         ref={panelRef}
-        className="relative bg-[#1C1A1B] border border-[#2E2A2B] p-10 max-w-2xl w-full m-4 z-10 rounded-none shadow-2xl"
+        className="relative bg-[#FFFFFF] border border-[#EAE4DD] p-10 max-w-2xl w-full m-4 z-10 rounded-none shadow-2xl"
       >
         {title && (
-          <h2 className="text-2xl font-bold mb-6 text-[#F5F0EB] tracking-wide uppercase">
+          <h2 className="text-2xl font-bold mb-6 text-[#141314] tracking-wide uppercase">
             {title}
           </h2>
         )}

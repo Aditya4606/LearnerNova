@@ -43,16 +43,16 @@ export default function LearnerLayout() {
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
 
   return (
-    <div className="min-h-screen bg-[#141314] w-full flex flex-col relative">
+    <div className="min-h-screen bg-[#F5F0EB] w-full flex flex-col relative">
       <PageTransition />
       
       {/* Sticky Navbar */}
       <nav 
         ref={navRef}
-        className="fixed top-0 left-0 right-0 h-[72px] bg-[#141314]/80 backdrop-blur-md border-b border-[#2E2A2B] z-[4000] px-8 flex items-center justify-between"
+        className="fixed top-0 left-0 right-0 h-[72px] bg-[#F5F0EB]/80 backdrop-blur-md border-b border-[#EAE4DD] z-[4000] px-8 flex items-center justify-between"
       >
         <div className="w-[200px]">
-          <NavLink to="/courses" className="text-[13px] tracking-[0.2em] font-bold text-[#F5F0EB] uppercase interactive">
+          <NavLink to="/courses" className="text-[13px] tracking-[0.2em] font-bold text-[#141314] uppercase interactive">
             LEARNOVA
           </NavLink>
         </div>
@@ -60,7 +60,7 @@ export default function LearnerLayout() {
         <div className="flex-1 flex justify-center">
           <NavLink 
             to="/courses" 
-            className={({isActive}) => `text-[11px] uppercase tracking-widest font-semibold interactive transition-colors ${isActive ? 'text-[#FB460D]' : 'text-[#6B6460] hover:text-[#F5F0EB]'}`}
+            className={({isActive}) => `text-[11px] uppercase tracking-widest font-semibold interactive transition-colors ${isActive ? 'text-[#FB460D]' : 'text-[#8A817C] hover:text-[#141314]'}`}
           >
             COURSES
           </NavLink>
@@ -70,14 +70,14 @@ export default function LearnerLayout() {
           {user ? (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <span className="text-[12px] font-semibold text-[#F5F0EB] hidden sm:block">{user.name}</span>
+                <span className="text-[12px] font-semibold text-[#141314] hidden sm:block">{user.name}</span>
                 <div className="w-8 h-8 rounded-full bg-[#FB460D] text-white flex items-center justify-center text-[10px] font-bold">
                   {initials}
                 </div>
               </div>
               <button 
                 onClick={handleLogout}
-                className="text-[10px] uppercase text-[#6B6460] hover:text-[#FB460D] tracking-widest font-bold interactive transition-colors"
+                className="text-[10px] uppercase text-[#8A817C] hover:text-[#FB460D] tracking-widest font-bold interactive transition-colors"
                 title="Logout"
               >
                 LOGOUT

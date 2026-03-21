@@ -55,31 +55,31 @@ export default function Signup() {
   ));
 
   return (
-    <div className="flex flex-row-reverse h-screen w-full overflow-hidden bg-[#141314]">
+    <div className="flex flex-row-reverse h-screen w-full overflow-hidden bg-[#F5F0EB]">
       <PageTransition />
       
       {/* Right Half Component (Mirrored Layout) */}
-      <div className="w-1/2 h-full bg-[#141314] relative p-12 flex flex-col justify-between hidden md:flex items-end text-right">
-        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#F5F0EB]">
+      <div className="w-1/2 h-full bg-[#F5F0EB] relative p-12 flex flex-col justify-between hidden md:flex items-end text-right">
+        <div className="text-[13px] uppercase tracking-[0.2em] font-bold text-[#141314]">
           LEARNOVA
         </div>
         
         <div ref={textContainer} className="flex justify-end relative">
           <div className="absolute -left-32 top-10 text-[#FB460D] text-[120px] font-bold char leading-none">+</div>
-          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#F5F0EB] flex">
+          <h1 className="text-[96px] font-[800] leading-none tracking-[-0.04em] text-[#141314] flex">
             {splitText}
           </h1>
         </div>
         
-        <div className="pt-8 border-t border-[#2E2A2B] w-full max-w-md text-right flex justify-end">
-          <Link to="/login" className="text-[#6B6460] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
+        <div className="pt-8 border-t border-[#EAE4DD] w-full max-w-md text-right flex justify-end">
+          <Link to="/login" className="text-[#8A817C] hover:text-[#FB460D] transition-colors uppercase tracking-widest text-[11px] font-bold interactive">
             ← ALREADY A MEMBER? LOGIN
           </Link>
         </div>
       </div>
 
       {/* Left Half Form */}
-      <div className="w-full md:w-1/2 h-full bg-[#1C1A1B] border-r border-[#2E2A2B] flex items-center justify-center p-8 relative">
+      <div className="w-full md:w-1/2 h-full bg-[#FFFFFF] border-r border-[#EAE4DD] flex items-center justify-center p-8 relative">
         <form onSubmit={handleSignup} className="w-full max-w-sm space-y-6" ref={formContainer}>
           <div className="mb-10">
             <h2 className="text-[10px] uppercase text-[#FB460D] tracking-[0.2em] font-bold">
@@ -103,10 +103,10 @@ export default function Signup() {
           <div className="w-24 h-24 rounded-full border-2 border-[#FB460D] flex items-center justify-center mb-6">
             <Check size={40} className="text-[#FB460D]" />
           </div>
-          <h3 className="text-[24px] font-bold text-[#F5F0EB] uppercase tracking-wide">
+          <h3 className="text-[24px] font-bold text-[#141314] uppercase tracking-wide">
             You're In.
           </h3>
-          <p className="text-[12px] text-[#6B6460] mt-2 tracking-widest uppercase">
+          <p className="text-[12px] text-[#8A817C] mt-2 tracking-widest uppercase">
             Redirecting to login...
           </p>
         </div>

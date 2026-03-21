@@ -28,7 +28,7 @@ export default function Button({ variant = 'primary', children, onClick, classNa
   
   const variantClasses = variant === 'primary' 
     ? "bg-[#FB460D] text-white border-0" 
-    : "bg-transparent border border-[#F5F0EB]/20 text-[#F5F0EB]";
+    : "bg-transparent border border-[#141314]/20 text-[#141314]";
 
   return (
     <button

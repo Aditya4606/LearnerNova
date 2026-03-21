@@ -15,7 +15,7 @@ export default function Card({ children, className = '', hoverEffect = true }) {
   const handleMouseLeave = () => {
     if (!hoverEffect) return;
     gsap.to(cardRef.current, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
-    gsap.to(cardRef.current, { borderColor: '#2E2A2B', duration: 0.3 });
+    gsap.to(cardRef.current, { borderColor: '#EAE4DD', duration: 0.3 });
     gsap.to(borderRef.current, { x: '-100%', duration: 0.3, ease: 'power2.out' });
   };
 
@@ -24,7 +24,7 @@ export default function Card({ children, className = '', hoverEffect = true }) {
       ref={cardRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative bg-[#1C1A1B] border border-[#2E2A2B] rounded-none p-6 overflow-hidden interactive ${className}`}
+      className={`relative bg-[#FFFFFF] border border-[#EAE4DD] rounded-none p-6 overflow-hidden interactive ${className}`}
     >
       {/* Animated Left Border */}
       {hoverEffect && (
