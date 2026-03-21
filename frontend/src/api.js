@@ -19,7 +19,19 @@ export const api = {
       credentials: 'include',
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Request failed');
+    if (!res.ok) throw new Error(data.message || data.error || 'Request failed');
+    return data;
+  },
+
+  async put(path, body) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error || 'Request failed');
     return data;
   },
 };
