@@ -28,6 +28,7 @@ import CourseDetail from './pages/learner/CourseDetail';
 
 import PlayerLayout from './layouts/PlayerLayout';
 import LessonPlayer from './pages/learner/LessonPlayer';
+import QuizPlayer from './pages/learner/QuizPlayer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -41,7 +42,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'SUPERADMIN') return <Navigate to="/superuser/dashboard" replace />;
     if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />;
     if (user.role === 'INSTRUCTOR') return <Navigate to="/admin/courses" replace />;
     return <Navigate to="/courses" replace />;
@@ -91,35 +91,32 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/superuser/login" element={<SuperLogin />} />
             
-            {/* SuperUser Routes */}
-            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['SUPERADMIN']}><SuperUserLayout /></ProtectedRoute>}>
-              <Route path="dashboard" element={<Users />} />
-              <Route path="users" element={<Users />} />
-              <Route path="" element={<Navigate to="dashboard" replace />} />
-            </Route>
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><AdminLayout /></ProtectedRoute>}>
+            {/* Admin Routes (ADMIN has all powers) */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR']}><AdminLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<Courses />} />
               <Route path="courses" element={<Courses />} />
               <Route path="courses/:id/edit" element={<CourseForm />} />
               <Route path="courses/:id/quiz/:qid" element={<QuizBuilder />} />
+              <Route path="users" element={<Users />} />
               <Route path="reporting" element={<Reporting />} />
               <Route path="" element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Learner Routes */}
-            <Route path="/courses" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><LearnerLayout /></ProtectedRoute>}>
+            <Route path="/courses" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><LearnerLayout /></ProtectedRoute>}>
               <Route index element={<MyCourses />} />
               <Route path=":id" element={<CourseDetail />} />
             </Route>
-            <Route path="/course/:id" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><LearnerLayout /></ProtectedRoute>}>
+            <Route path="/course/:id" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><LearnerLayout /></ProtectedRoute>}>
               <Route index element={<CourseDetail />} />
             </Route>
 
             {/* Player Route */}
-            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR', 'SUPERADMIN']}><PlayerLayout /></ProtectedRoute>}>
+            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><PlayerLayout /></ProtectedRoute>}>
               <Route index element={<LessonPlayer />} />
+            </Route>
+            <Route path="/courses/:id/quiz/:qid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><PlayerLayout /></ProtectedRoute>}>
+              <Route index element={<QuizPlayer />} />
             </Route>
             
             <Route path="/" element={<Navigate to="/login" replace />} />

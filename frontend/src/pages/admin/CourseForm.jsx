@@ -7,6 +7,7 @@ import Input from '../../components/Input';
 import Toggle from '../../components/Toggle';
 import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
+import LessonModal from './LessonModal';
 import { api } from '../../api';
 
 export default function CourseForm() {
@@ -19,10 +20,13 @@ export default function CourseForm() {
     isPublished: false,
     website: '',
     imageUrl: '',
+    price: 0,
     tags: [],
     createdBy: '',
     lessons: [],
-    quizzes: []
+    quizzes: [],
+    visibility: 'everyone',
+    accessRule: 'open'
   });
   
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,26 @@ export default function CourseForm() {
   const [newTag, setNewTag] = useState('');
   const [instructors, setInstructors] = useState([]);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  const fetchCourse = async () => {
+    try {
+      const data = await api.get(`/courses/${id}`);
+      setCourse(data);
+    } catch (err) {
+      console.error("Failed to refresh course", err);
+    }
+  };
+
+  const deleteLesson = async (lessonId) => {
+    if (!window.confirm("Are you sure you want to delete this lesson? This action cannot be undone.")) return;
+    try {
+      await api.delete(`/lessons/${lessonId}`);
+      fetchCourse();
+    } catch (err) {
+      console.error("Failed to delete lesson", err);
+    }
+  };
 
   const tabsRef = useRef(null);
   const tabUnderlineRef = useRef(null);
@@ -75,8 +99,9 @@ export default function CourseForm() {
   const handleSave = async () => {
     try {
       setSaveLoading(true);
-      await api.put(`/courses/${id}`, course);
-      // Show success toast or similar
+      // Only send scalar fields, not nested relations (lessons, quizzes, instructor)
+      const { title, description, isPublished, website, imageUrl, price, tags, createdBy, views, duration, lessonsCount, visibility, accessRule } = course;
+      await api.put(`/courses/${id}`, { title, description, isPublished, website, imageUrl, price, tags, createdBy, views, duration, lessonsCount, visibility, accessRule });
     } catch (err) {
       console.error("Failed to save course", err);
     } finally {
@@ -122,7 +147,7 @@ export default function CourseForm() {
   );
 
   return (
-    <div className="h-full flex flex-col relative bg-[#F5F0EB] overflow-y-auto pb-32">
+    <div className="flex flex-col relative bg-[#F5F0EB] pb-32">
       {/* Sticky Top Bar */}
       <div className="sticky top-0 z-50 bg-[#F5F0EB]/90 backdrop-blur border-b border-[#EAE4DD] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -195,9 +220,20 @@ export default function CourseForm() {
                         <p className="text-[14px] text-[#141314] font-semibold">{lesson.title}</p>
                       </div>
                       <Badge variant="default" className="!text-[9px] uppercase">{lesson.type}</Badge>
-                      <button className="text-[#8A817C] hover:text-[#FB460D] interactive ml-4">
-                        <MoreVertical size={16} />
-                      </button>
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => { setSelectedLesson(lesson); setLessonModal(true); }}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-[#FB460D] uppercase tracking-widest"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteLesson(lesson.id)}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-red-500 uppercase tracking-widest"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   )) : (
                     <div className="py-20 text-center">
@@ -220,22 +256,98 @@ export default function CourseForm() {
               )}
 
               {activeTab === 'OPTIONS' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6">
-                    <div className="p-6 border border-[#EAE4DD] flex items-center justify-between group hover:border-[#FB460D]/30 transition-all cursor-pointer">
-                      <div>
-                        <p className="text-[14px] font-semibold text-[#141314] mb-1 text-uppercase">Public Visibility</p>
-                        <p className="text-[11px] text-[#8A817C]">Allow non-enrolled users to see the course overview.</p>
-                      </div>
-                      <Toggle checked={true} onChange={() => {}} />
+                <div className="space-y-8">
+                  {/* Visibility */}
+                  <div>
+                    <label className="text-[10px] uppercase text-[#FB460D] tracking-widest font-bold mb-4 block">Show Course To</label>
+                    <div className="space-y-3">
+                      {[
+                        { value: 'everyone', label: 'Everyone', desc: 'Anyone can see the course listing' },
+                        { value: 'signed_in', label: 'Signed In Users', desc: 'Only registered users can view this course' },
+                      ].map(opt => (
+                        <div
+                          key={opt.value}
+                          onClick={() => setCourse({ ...course, visibility: opt.value })}
+                          className={`p-5 border cursor-pointer transition-all flex items-center justify-between ${
+                            course.visibility === opt.value
+                              ? 'border-[#FB460D] bg-[#FB460D]/5'
+                              : 'border-[#EAE4DD] hover:border-[#FB460D]/30'
+                          }`}
+                        >
+                          <div>
+                            <p className="text-[13px] font-semibold text-[#141314]">{opt.label}</p>
+                            <p className="text-[11px] text-[#8A817C] mt-1">{opt.desc}</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            course.visibility === opt.value ? 'border-[#FB460D]' : 'border-[#8A817C]'
+                          }`}>
+                            {course.visibility === opt.value && <div className="w-2.5 h-2.5 bg-[#FB460D] rounded-full"></div>}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="p-6 border border-[#EAE4DD] flex items-center justify-between group hover:border-[#FB460D]/30 transition-all cursor-pointer">
-                      <div>
-                        <p className="text-[14px] font-semibold text-[#141314] mb-1">Sequential Progression</p>
-                        <p className="text-[11px] text-[#8A817C]">Learners must finish lessons in order.</p>
-                      </div>
-                      <Toggle checked={false} onChange={() => {}} />
+                  </div>
+
+                  {/* Access Rule */}
+                  <div>
+                    <label className="text-[10px] uppercase text-[#FB460D] tracking-widest font-bold mb-4 block">Access Rule</label>
+                    <div className="space-y-3">
+                      {[
+                        { value: 'open', label: 'Open', desc: 'Anyone can start learning this course' },
+                        { value: 'invitation', label: 'On Invitation', desc: 'Only invited learners can access the course' },
+                        { value: 'payment', label: 'On Payment', desc: 'Learners must pay to access this course' },
+                      ].map(opt => (
+                        <div
+                          key={opt.value}
+                          onClick={() => setCourse({ ...course, accessRule: opt.value })}
+                          className={`p-5 border cursor-pointer transition-all flex items-center justify-between ${
+                            course.accessRule === opt.value
+                              ? 'border-[#FB460D] bg-[#FB460D]/5'
+                              : 'border-[#EAE4DD] hover:border-[#FB460D]/30'
+                          }`}
+                        >
+                          <div>
+                            <p className="text-[13px] font-semibold text-[#141314]">{opt.label}</p>
+                            <p className="text-[11px] text-[#8A817C] mt-1">{opt.desc}</p>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            course.accessRule === opt.value ? 'border-[#FB460D]' : 'border-[#8A817C]'
+                          }`}>
+                            {course.accessRule === opt.value && <div className="w-2.5 h-2.5 bg-[#FB460D] rounded-full"></div>}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  {/* Price field - Only when payment selected */}
+                  {course.accessRule === 'payment' && (
+                    <div className="p-6 border border-[#FB460D]/30 bg-[#FB460D]/5">
+                      <label className="text-[10px] uppercase text-[#FB460D] tracking-widest font-bold mb-3 block">Course Price (₹)</label>
+                      <input
+                        type="number"
+                        value={course.price || 0}
+                        onChange={(e) => setCourse({ ...course, price: parseFloat(e.target.value) || 0 })}
+                        className="w-full bg-transparent border-b-2 border-[#141314] py-3 text-[24px] font-bold text-[#141314] outline-none focus:border-[#FB460D] transition-colors"
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+                  )}
+
+                  {/* Course Admin */}
+                  <div>
+                    <label className="text-[10px] uppercase text-[#FB460D] tracking-widest font-bold mb-4 block">Course Admin / Responsible</label>
+                    <select
+                      value={course.createdBy}
+                      onChange={(e) => setCourse({ ...course, createdBy: e.target.value })}
+                      className="w-full bg-[#F5F0EB] text-[#141314] border-b-2 border-[#141314] py-3 px-0 focus:outline-none focus:border-[#FB460D] transition-colors text-[14px] uppercase tracking-widest font-bold cursor-pointer"
+                    >
+                      {instructors.map(inst => (
+                        <option key={inst.id} value={inst.id}>{inst.username} ({inst.role})</option>
+                      ))}
+                      {!instructors.some(i => i.id === course.createdBy) && <option value={course.createdBy}>Current Admin</option>}
+                    </select>
                   </div>
                 </div>
               )}
@@ -244,24 +356,44 @@ export default function CourseForm() {
                 <div className="space-y-6">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-[14px] font-bold text-[#141314] uppercase tracking-wider">Assessments</h3>
-                    <Button variant="ghost" className="!py-1 !px-3 !text-[10px]">+ ADD QUIZ</Button>
+                    <Button variant="ghost" className="!py-1 !px-3 !text-[10px]" onClick={async () => {
+                      try {
+                        const quiz = await api.post('/quizzes', { title: `Quiz ${(course.quizzes?.length || 0) + 1}`, courseId: id });
+                        setCourse({ ...course, quizzes: [...(course.quizzes || []), quiz] });
+                      } catch (err) { console.error(err); }
+                    }}>+ ADD QUIZ</Button>
                   </div>
-                  {course.quizzes && course.quizzes.length > 0 ? course.quizzes.map((quiz, i) => (
-                    <div key={quiz.id} className="flex items-center space-x-4 py-4 border-b border-[#EAE4DD] last:border-0">
+                  {course.quizzes && course.quizzes.length > 0 ? course.quizzes.map((quiz) => (
+                    <div key={quiz.id} className="flex items-center space-x-4 py-4 border-b border-[#EAE4DD] last:border-0 group hover:bg-[#F5F0EB]/30 px-4 -mx-4 transition-colors">
                       <FileText size={18} className="text-[#FB460D]" />
                       <div className="flex-1">
                         <p className="text-[14px] text-[#141314] font-semibold">{quiz.title}</p>
+                        <p className="text-[11px] text-[#8A817C]">{quiz.questions?.length || 0} questions</p>
                       </div>
-                      <button 
-                        onClick={() => navigate(`/admin/courses/${id}/quiz/${quiz.id}`)}
-                        className="text-[11px] font-bold text-[#8A817C] hover:text-[#FB460D] uppercase tracking-widest"
-                      >
-                        Edit Quiz
-                      </button>
+                      <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => navigate(`/admin/courses/${id}/quiz/${quiz.id}`)}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-[#FB460D] uppercase tracking-widest"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (!window.confirm('Delete this quiz and all its questions?')) return;
+                            try {
+                              await api.delete(`/quizzes/${quiz.id}`);
+                              setCourse(prev => ({ ...prev, quizzes: prev.quizzes.filter(q => q.id !== quiz.id) }));
+                            } catch (err) { console.error(err); }
+                          }}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-red-500 uppercase tracking-widest"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   )) : (
                     <div className="py-20 text-center">
-                      <p className="text-[#8A817C] text-[13px]">No quizzes architected for this course module.</p>
+                      <p className="text-[#8A817C] text-[13px]">No quizzes created yet. Add a quiz to assess your learners.</p>
                     </div>
                   )}
                 </div>
@@ -310,6 +442,15 @@ export default function CourseForm() {
                   placeholder="https://learnova.com/..." 
                   value={course.website || ''}
                   onChange={(e) => setCourse({...course, website: e.target.value})}
+                  required={course.isPublished}
+                />
+
+                <Input 
+                  label="COURSE PRICE (₹)" 
+                  type="number"
+                  placeholder="0" 
+                  value={course.price || 0}
+                  onChange={(e) => setCourse({...course, price: parseFloat(e.target.value) || 0})}
                   required={course.isPublished}
                 />
 
@@ -370,77 +511,19 @@ export default function CourseForm() {
         </div>
       </div>
 
-      <LessonModal isOpen={lessonModal} onClose={() => setLessonModal(false)} courseId={id} onAdded={id !== 'new' ? () => api.get(`/courses/${id}`).then(setCourse) : null} />
+      <LessonModal 
+        isOpen={lessonModal} 
+        onClose={() => { setLessonModal(false); setSelectedLesson(null); }} 
+        courseId={id} 
+        lesson={selectedLesson}
+        onSave={() => fetchCourse()} 
+      />
       <AttendeesModal isOpen={attendeesModal} onClose={() => setAttendeesModal(false)} courseId={id} />
       <ContactModal isOpen={contactModal} onClose={() => setContactModal(false)} courseId={id} />
     </div>
   );
 }
 
-function LessonModal({ isOpen, onClose, courseId, onAdded }) {
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('video');
-  const [loading, setLoading] = useState(false);
-  
-  const handleSave = async () => {
-    if (!title.trim()) return;
-    try {
-      setLoading(true);
-      await api.post(`/courses/${courseId}/lessons`, { 
-        title: title.trim(), 
-        type: type,
-        content: type === 'text' ? 'Start typing your lesson content here...' : ''
-      });
-      onClose();
-      setTitle('');
-      if (onAdded) onAdded();
-    } catch (err) {
-      console.error("Failed to add lesson:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#EAE4DD]">
-        <h2 className="text-[18px] font-bold text-white uppercase tracking-wider">New Lesson Module</h2>
-      </div>
-      
-      <div className="space-y-6 text-white">
-        <Input 
-          label="LESSON TITLE" 
-          placeholder="e.g. Introduction to Odoo" 
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-white border-white/20"
-        />
-        
-        <div>
-          <label className="text-[10px] uppercase text-[#FB460D] tracking-widest mb-3 block">LESSON TYPE</label>
-          <div className="grid grid-cols-4 gap-4">
-            {['video', 'text', 'pdf', 'quiz'].map((t) => (
-              <button 
-                key={t} 
-                onClick={() => setType(t)}
-                className={`p-4 border text-center interactive cursor-pointer font-bold tracking-widest text-[10px] uppercase transition-colors ${type === t ? 'border-[#FB460D] text-[#FB460D] bg-[#FB460D]/10' : 'border-white/20 text-white/60 hover:border-white/40'}`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-end space-x-4 mt-12 pt-6 border-t border-white/10">
-        <Button variant="ghost" className="!text-white hover:!bg-white/10" onClick={onClose}>CANCEL</Button>
-        <Button onClick={handleSave} disabled={loading || !title.trim()}>
-          {loading ? 'ARCHITECTING...' : 'SAVE MODULE'}
-        </Button>
-      </div>
-    </Modal>
-  );
-}
 
 function AttendeesModal({ isOpen, onClose, courseId }) {
   const [email, setEmail] = useState('');

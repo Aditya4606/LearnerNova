@@ -24,10 +24,22 @@ body {
   padding: 0;
 }
 
-/* Hide scrollbar but keep scroll functionality */
+/* Custom thin scrollbar for premium feel */
 ::-webkit-scrollbar {
-  display: none;
+  width: 6px;
 }
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #EAE4DD;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FB460D44;
+}
+
 html {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #EAE4DD transparent;
 }

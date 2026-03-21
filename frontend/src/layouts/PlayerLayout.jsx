@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ChevronLeft, ChevronRight, FileText, Play, CheckCircle2 } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
-import { MOCK_LESSONS, MOCK_COURSES } from '../mockData';
+import { api } from '../api';
+import { useParams } from 'react-router-dom';
 
 export default function PlayerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -11,8 +12,27 @@ export default function PlayerLayout() {
   const mainRef = useRef(null);
   const navigate = useNavigate();
 
-  const course = MOCK_COURSES[0];
-  const lessons = MOCK_LESSONS.filter(l => l.courseId === course.id);
+  const { id } = useParams();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get(`/courses/${id}`);
+        setCourse(data);
+      } catch (err) {
+        console.error("Failed to load course in player", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [id]);
+
+  const lessons = course?.lessons || [];
+  const quizzes = course?.quizzes || [];
 
   const toggleSidebar = () => {
     const nextState = !sidebarOpen;
@@ -27,7 +47,7 @@ export default function PlayerLayout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#141314] overflow-hidden">
+    <div className="flex min-h-screen w-full bg-[#141314]">
       <PageTransition />
       
       {/* Sidebar */}
@@ -37,7 +57,7 @@ export default function PlayerLayout() {
       >
         <div className="p-6 border-b border-[#EAE4DD]">
           <h2 className="text-[13px] uppercase tracking-widest text-[#8A817C] font-bold mb-3 truncate">
-            {course.title}
+            {course?.title || 'Loading...'}
           </h2>
           <div className="w-full h-1 bg-[#EAE4DD] rounded-none">
             <div className="h-full bg-[#10B981] w-[40%]"></div>
@@ -45,17 +65,21 @@ export default function PlayerLayout() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          <div className="px-6 py-4 bg-[#F5F0EB]/5 border-b border-[#EAE4DD]">
+            <p className="text-[10px] uppercase font-black text-[#8A817C] tracking-widest">Modules</p>
+          </div>
           {lessons.map((lesson, idx) => (
             <div 
               key={lesson.id} 
-              className={`p-4 border-b border-[#EAE4DD] flex items-center space-x-3 interactive cursor-pointer hover:bg-[#FFFFFF] ${idx === 0 ? 'bg-[#FFFFFF]' : ''}`}
+              onClick={() => navigate(`/courses/${id}/lesson/${lesson.id}`)}
+              className={`p-4 border-b border-[#EAE4DD] flex items-center space-x-3 interactive cursor-pointer hover:bg-[#FFFFFF]`}
             >
               {lesson.status === 'completed' && <CheckCircle2 size={16} className="text-[#FB460D]" />}
               {lesson.status === 'in-progress' && <Play size={16} className="text-[#FB460D]" />}
               {lesson.status === 'not-started' && <div className="w-4 h-4 rounded-full border border-[#8A817C]"></div>}
               
               <div className="flex-1">
-                <p className={`text-[13px] ${idx === 0 ? 'text-[#FB460D]' : 'text-[#141314]'}`}>{lesson.title}</p>
+                <p className="text-[13px] text-[#141314]">{lesson.title}</p>
                 <div className="flex items-center space-x-2 mt-1">
                   {lesson.type === 'video' ? <Play size={10} className="text-[#8A817C]" /> : <FileText size={10} className="text-[#8A817C]" />}
                   <span className="text-[10px] text-[#8A817C] uppercase tracking-widest">{lesson.type}</span>
@@ -63,13 +87,34 @@ export default function PlayerLayout() {
               </div>
             </div>
           ))}
+
+          {quizzes.length > 0 && (
+            <>
+              <div className="px-6 py-4 bg-[#F5F0EB]/5 border-b border-[#EAE4DD] mt-4">
+                <p className="text-[10px] uppercase font-black text-[#8A817C] tracking-widest">Assessments</p>
+              </div>
+              {quizzes.map((quiz) => (
+                <div 
+                  key={quiz.id} 
+                  onClick={() => navigate(`/courses/${id}/quiz/${quiz.id}`)}
+                  className="p-4 border-b border-[#EAE4DD] flex items-center space-x-3 interactive cursor-pointer hover:bg-[#FFFFFF]"
+                >
+                  <div className="w-4 h-4 rounded-full border border-[#FB460D] flex items-center justify-center text-[8px] font-bold text-[#FB460D]">Q</div>
+                  <div className="flex-1">
+                    <p className="text-[13px] text-[#141314]">{quiz.title}</p>
+                    <p className="text-[9px] text-[#8A817C] uppercase tracking-widest">Assessment</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
       {/* Main Area */}
       <div 
         ref={mainRef}
-        className="flex-1 flex flex-col h-full bg-[#F5F0EB] relative z-10 w-full ml-[280px]"
+        className="flex-1 flex flex-col bg-[#F5F0EB] relative z-10 w-full ml-[280px]"
       >
         <button 
           onClick={toggleSidebar}

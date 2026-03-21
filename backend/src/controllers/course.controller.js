@@ -48,14 +48,14 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     const { id: courseId } = req.params;
-    const { title, description, isPublished, tags, views, duration, lessonsCount, website, imageUrl } = req.body;
+    const { title, description, isPublished, tags, views, duration, lessonsCount, website, imageUrl, price, visibility, accessRule } = req.body;
     const { role, id: userId } = req.user;
 
     // Verify ownership or admin rights
     const existing = await prisma.course.findUnique({ where: { id: courseId } });
     if (!existing) return res.status(404).json({ message: "Course not found" });
     
-    if (role !== 'ADMIN' && role !== 'SUPERADMIN' && existing.createdBy !== userId) {
+    if (role !== 'ADMIN' && existing.createdBy !== userId) {
       return res.status(403).json({ message: "Not authorized to edit this course" });
     }
 
@@ -70,7 +70,10 @@ export const updateCourse = async (req, res) => {
         duration, 
         lessonsCount,
         website,
-        imageUrl
+        imageUrl,
+        price,
+        visibility,
+        accessRule
       }
     });
 

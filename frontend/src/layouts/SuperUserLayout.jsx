@@ -19,14 +19,14 @@ export default function SuperUserLayout() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-[#F5F0EB] overflow-hidden">
+    <div className="flex min-h-screen w-full bg-[#F5F0EB]">
       <PageTransition />
       
       {/* Sidebar */}
-      <div className="w-[220px] flex-shrink-0 bg-[#141314] border-r border-[#EAE4DD] flex flex-col justify-between">
+      <div className="w-[220px] flex-shrink-0 bg-[#141314] border-r border-[#EAE4DD] flex flex-col justify-between h-screen sticky top-0">
         <div>
           <div className="p-8 pb-12">
-            <h1 className="text-[13px] tracking-[0.2em] font-bold text-[#141314] uppercase">LEARNOVA</h1>
+            <h1 className="text-[13px] tracking-[0.2em] font-bold text-[#FFFFFF] uppercase">LEARNOVA</h1>
             <p className="text-[9px] text-[#8A817C] mt-1 tracking-widest uppercase">Super Admin</p>
           </div>
           
@@ -37,7 +37,7 @@ export default function SuperUserLayout() {
                 <NavLink 
                   key={item.label}
                   to={item.path}
-                  className={`flex items-center px-6 py-4 text-[12px] tracking-widest uppercase relative interactive ${isActive ? 'text-[#FB460D]' : 'text-[#8A817C] hover:text-[#141314]'}`}
+                  className={`flex items-center px-6 py-4 text-[12px] tracking-widest uppercase relative interactive ${isActive ? 'text-[#FB460D]' : 'text-[#8A817C] hover:text-[#FFFFFF]'}`}
                 >
                   <span className="font-semibold">{item.label}</span>
                   {isActive && (
@@ -49,7 +49,7 @@ export default function SuperUserLayout() {
           </nav>
         </div>
 
-        <div className="p-8 border-t border-[#EAE4DD]">
+        <div className="p-8 border-t border-white/10">
           <button 
             onClick={handleLogout}
             className="text-[10px] uppercase text-[#8A817C] hover:text-[#FB460D] tracking-widest font-bold interactive transition-colors"
@@ -60,8 +60,8 @@ export default function SuperUserLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <main className="flex-1 overflow-y-auto relative bg-[#F5F0EB]">
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 relative bg-[#F5F0EB]">
           <Outlet />
         </main>
       </div>
