@@ -114,7 +114,7 @@ export default function MyCourses() {
                 {initials}
               </div>
               <div>
-                <h3 className="text-[18px] font-bold text-[#141314]">{displayName}</h3>
+                <h3 className="text-[18px] font-bold text-[#141314]">{user?.name}</h3>
                 <Badge variant="default" className="mt-1">LEARNER</Badge>
               </div>
             </div>

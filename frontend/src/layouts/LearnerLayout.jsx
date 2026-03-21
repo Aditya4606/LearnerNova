@@ -71,7 +71,7 @@ export default function LearnerLayout() {
           {user ? (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <span className="text-[12px] font-semibold text-[#141314] hidden sm:block">{displayName}</span>
+                <span className="text-[12px] font-semibold text-[#141314] hidden sm:block">{user.name}</span>
                 <div className="w-8 h-8 rounded-full bg-[#FB460D] text-white flex items-center justify-center text-[10px] font-bold">
                   {initials}
                 </div>

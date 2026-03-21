@@ -65,7 +65,7 @@ export default function AdminLayout() {
               {initials}
             </div>
             <div className="truncate">
-              <p className="text-[12px] font-semibold text-[#141314] truncate">{displayName}</p>
+              <p className="text-[12px] font-semibold text-[#141314] truncate">{user?.name}</p>
             </div>
           </div>
           <button 
