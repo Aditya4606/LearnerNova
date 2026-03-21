@@ -34,6 +34,7 @@ model Course {
   lessonsCount Int          @default(0)
   tags         String[]     @default([])
   views        Int          @default(0)
+  price        Float        @default(0)
   instructor   User         @relation("InstructorCourses", fields: [createdBy], references: [id])
   lessons      Lesson[]
   quizzes      Quiz[]
