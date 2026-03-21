@@ -2,10 +2,9 @@ import prisma from "../config/db.js";
 
 export const createLesson = async (req, res) => {
   try {
-    const { courseId } = req.params;
+    const courseId = parseInt(req.params.courseId);
     const { title, type, content, duration, allowDownload, description, responsible } = req.body;
 
-    // Get the current highest order to append
     const lastLesson = await prisma.lesson.findFirst({
       where: { courseId },
       orderBy: { order: 'desc' }
@@ -26,7 +25,6 @@ export const createLesson = async (req, res) => {
       }
     });
 
-    // Update course lesson count
     await prisma.course.update({
       where: { id: courseId },
       data: { lessonsCount: { increment: 1 } }
@@ -40,7 +38,7 @@ export const createLesson = async (req, res) => {
 
 export const getLessons = async (req, res) => {
   try {
-    const { courseId } = req.params;
+    const courseId = parseInt(req.params.courseId);
     const lessons = await prisma.lesson.findMany({
       where: { courseId },
       include: { attachments: true },
@@ -54,7 +52,7 @@ export const getLessons = async (req, res) => {
 
 export const updateLesson = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { title, type, content, duration, allowDownload, description, responsible, order } = req.body;
 
     const lesson = await prisma.lesson.update({
@@ -79,14 +77,13 @@ export const updateLesson = async (req, res) => {
 
 export const deleteLesson = async (req, res) => {
   try {
-    const { id } = req.params;
-    
+    const id = parseInt(req.params.id);
+
     const lesson = await prisma.lesson.findUnique({ where: { id } });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
     await prisma.lesson.delete({ where: { id } });
 
-    // Update course lesson count
     await prisma.course.update({
       where: { id: lesson.courseId },
       data: { lessonsCount: { decrement: 1 } }
@@ -100,7 +97,7 @@ export const deleteLesson = async (req, res) => {
 
 export const addAttachment = async (req, res) => {
   try {
-    const { lessonId } = req.params;
+    const lessonId = parseInt(req.params.lessonId);
     const { title, type, url } = req.body;
 
     const attachment = await prisma.attachment.create({
@@ -120,7 +117,7 @@ export const addAttachment = async (req, res) => {
 
 export const deleteAttachment = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     await prisma.attachment.delete({ where: { id } });
     res.json({ message: "Attachment deleted successfully" });
   } catch (err) {
@@ -130,7 +127,8 @@ export const deleteAttachment = async (req, res) => {
 
 export const markLessonComplete = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+    const userId = parseInt(req.user.id);
 
     const lesson = await prisma.lesson.findUnique({ where: { id } });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
@@ -140,16 +138,13 @@ export const markLessonComplete = async (req, res) => {
       data: { status: 'completed' }
     });
 
-    // Recalculate course progress for the user's enrollment
-    const { id: userId } = req.user;
     const allLessons = await prisma.lesson.findMany({ where: { courseId: lesson.courseId } });
     const completedCount = allLessons.filter(l => l.id === id ? true : l.status === 'completed').length;
     const progressPercent = Math.round((completedCount / allLessons.length) * 100);
 
-    // Update enrollment progress if user is enrolled
     await prisma.enrollment.updateMany({
       where: { userId, courseId: lesson.courseId },
-      data: { 
+      data: {
         progress: progressPercent,
         status: progressPercent >= 100 ? 'completed' : 'in_progress',
         ...(progressPercent >= 100 ? { completedAt: new Date() } : {}),

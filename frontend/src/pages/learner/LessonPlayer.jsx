@@ -19,7 +19,7 @@ export default function LessonPlayer() {
 
   useEffect(() => {
     if (lessons && lessonId) {
-      const found = lessons.find(l => l.id === lessonId);
+      const found = lessons.find(l => l.id === parseInt(lessonId));
       setLesson(found || null);
       setIsCompleted(found?.status === 'completed');
     }
@@ -64,7 +64,7 @@ export default function LessonPlayer() {
   }, [lesson?.id]);
 
   // Find current index for navigation
-  const currentIdx = lessons ? lessons.findIndex(l => l.id === lessonId) : -1;
+  const currentIdx = lessons ? lessons.findIndex(l => l.id === parseInt(lessonId)) : -1;
   const prevLesson = currentIdx > 0 ? lessons[currentIdx - 1] : null;
   const nextLesson = currentIdx >= 0 && currentIdx < (lessons?.length || 0) - 1 ? lessons[currentIdx + 1] : null;
 
@@ -111,9 +111,31 @@ export default function LessonPlayer() {
     const content = lesson.content || '';
 
     if (type === 'video' || isYouTubeUrl(content) || isVimeoUrl(content)) {
+      let isNativeVideo = false;
       let embedUrl = content;
-      if (isYouTubeUrl(content)) embedUrl = getYouTubeEmbedUrl(content);
-      else if (isVimeoUrl(content)) embedUrl = getVimeoEmbedUrl(content);
+      
+      if (isYouTubeUrl(content)) {
+        embedUrl = getYouTubeEmbedUrl(content);
+      } else if (isVimeoUrl(content)) {
+        embedUrl = getVimeoEmbedUrl(content);
+      } else {
+        isNativeVideo = true;
+        embedUrl = content.startsWith('http') ? content : `http://localhost:3000${content}`;
+      }
+
+      if (isNativeVideo) {
+        return (
+          <div className="aspect-video w-full bg-black relative overflow-hidden shadow-2xl flex items-center justify-center">
+            <video
+              src={embedUrl}
+              controls
+              className="w-full h-full object-contain"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      }
 
       return (
         <div className="aspect-video w-full bg-black relative overflow-hidden shadow-2xl">

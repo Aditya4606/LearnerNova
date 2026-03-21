@@ -9,26 +9,26 @@ datasource db {
 }
 
 model User {
-  id             String       @id @default(uuid())
-  email          String       @unique
-  username       String       @unique
+  id             Int           @id @default(autoincrement())
+  email          String        @unique
+  username       String
   password       String
-  role           Role         @default(LEARNER)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  coursesCreated Course[]     @relation("InstructorCourses")
+  role           Role          @default(LEARNER)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  coursesCreated Course[]      @relation("InstructorCourses")
   enrollments    Enrollment[]
   reviews        Review[]
   quizAttempts   QuizAttempt[]
 }
 
 model Course {
-  id           String       @id @default(uuid())
+  id           Int          @id @default(autoincrement())
   title        String
   description  String?
   isPublished  Boolean      @default(false)
   createdAt    DateTime     @default(now())
-  createdBy    String
+  createdBy    Int
   duration     String?
   lessonsCount Int          @default(0)
   tags         String[]     @default([])
@@ -39,7 +39,7 @@ model Course {
   price        Float        @default(0)
   visibility   String       @default("everyone")
   accessRule   String       @default("open")
-  instructor   User         @relation("InstructorCourses", fields: [createdBy], references: [id])
+  instructor   User         @relation("InstructorCourses", fields: [createdBy], references: [id], onDelete: Cascade)
   enrollments  Enrollment[]
   lessons      Lesson[]
   quizzes      Quiz[]
@@ -47,67 +47,67 @@ model Course {
 }
 
 model Lesson {
-  id            String   @id @default(uuid())
+  id            Int          @id @default(autoincrement())
   title         String
   content       String?
-  type          String   @default("video")
-  status        String   @default("not-started")
-  order         Int      @default(0)
-  courseId      String
+  type          String       @default("video")
+  status        String       @default("not-started")
+  order         Int          @default(0)
+  courseId      Int
   description   String?
   responsible   String?
   duration      String?
-  allowDownload Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  allowDownload Boolean      @default(false)
+  createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  course        Course       @relation(fields: [courseId], references: [id])
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   attachments   Attachment[]
 }
 
 model Attachment {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   title     String
   type      String
   url       String
-  lessonId  String
+  lessonId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  lesson    Lesson   @relation(fields: [lessonId], references: [id])
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 }
 
 model Quiz {
-  id        String     @id @default(uuid())
+  id        Int           @id @default(autoincrement())
   title     String
-  courseId  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  rewards      Json?      
-  questions    Question[]
-  attempts     QuizAttempt[]
-  course       Course     @relation(fields: [courseId], references: [id])
+  courseId  Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  rewards   Json?
+  questions Question[]
+  attempts  QuizAttempt[]
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model Question {
-  id      String   @id @default(uuid())
+  id      Int    @id @default(autoincrement())
   text    String
   options String[]
   answer  Int
-  quizId  String
-  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  quizId  Int
+  quiz    Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }
 
 model Enrollment {
-  id          String    @id @default(uuid())
-  userId      String
-  courseId    String
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  courseId    Int
   progress    Int       @default(0)
   status      String    @default("yet_to_start")
   startedAt   DateTime?
   completedAt DateTime?
   timeSpent   Int       @default(0)
   createdAt   DateTime  @default(now())
-  course      Course    @relation(fields: [courseId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -119,33 +119,33 @@ enum Role {
 }
 
 model Review {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   rating    Int
   comment   String?
-  userId    String
-  courseId  String
+  userId    Int
+  courseId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
 
 model QuizAttempt {
-  id        String   @id @default(uuid())
-  userId    String
-  quizId    String
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  quizId    Int
   score     Int
   total     Int
   attemptNo Int
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
 }
 
 model PasswordOtp {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   email     String
   otp       String
   expiresAt DateTime

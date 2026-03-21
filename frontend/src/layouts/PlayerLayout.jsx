@@ -103,7 +103,7 @@ export default function PlayerLayout() {
             <p className="text-[9px] uppercase font-black text-[#8A817C] tracking-[0.15em]">Modules</p>
           </div>
           {lessons.map((lesson, idx) => {
-            const isActive = currentLessonId === lesson.id;
+            const isActive = parseInt(currentLessonId) === lesson.id;
             return (
               <div key={lesson.id}>
                 <div 
