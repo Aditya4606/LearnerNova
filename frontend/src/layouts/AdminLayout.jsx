@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, BarChart2, Settings, Bell } from 'lucide-react';
+import { BookOpen, BarChart2, Settings, Bell, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import PageTransition from '../components/PageTransition';
 
@@ -16,9 +16,16 @@ export default function AdminLayout() {
 
   const navItems = [
     { label: 'Courses', path: '/admin/courses', icon: <BookOpen size={16} /> },
-    { label: 'Reporting', path: '/admin/reporting', icon: <BarChart2 size={16} /> },
-    { label: 'Settings', path: '/admin/settings', icon: <Settings size={16} /> },
   ];
+
+  if (user?.role === 'ADMIN') {
+    navItems.push({ label: 'Users', path: '/admin/users', icon: <UsersIcon size={16} /> });
+  }
+
+  navItems.push(
+    { label: 'Reporting', path: '/admin/reporting', icon: <BarChart2 size={16} /> },
+    { label: 'Settings', path: '/admin/settings', icon: <Settings size={16} /> }
+  );
 
   // Helper to get initials
   const displayName = user?.username || user?.name || '';

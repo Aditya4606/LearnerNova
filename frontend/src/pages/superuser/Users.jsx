@@ -5,8 +5,10 @@ import Input from '../../components/Input';
 import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
 import Button from '../../components/Button';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Users() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('ALL');

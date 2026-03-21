@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Play, CheckCircle2, Circle, MessageSquare, Download, Link as LinkIcon, ChevronDown } from 'lucide-react';
 import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
+import { CheckCircle2, Circle, Download, Link as LinkIcon, Play } from 'lucide-react';
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -13,8 +14,16 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('OVERVIEW');
   const [expandedLessonId, setExpandedLessonId] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const tabsRef = useRef(null);
   const tabUnderlineRef = useRef(null);
   const reviewsRef = useRef(null);
@@ -23,8 +32,12 @@ export default function CourseDetail() {
     const fetchCourse = async () => {
       try {
         setLoading(true);
-        const data = await api.get(`/courses/${id}`);
-        setCourse(data);
+        const [courseData, reviewsData] = await Promise.all([
+          api.get(`/courses/${id}`),
+          api.get(`/reviews/${id}`)
+        ]);
+        setCourse(courseData);
+        setReviews(reviewsData);
       } catch (err) {
         setError(err.message || 'Failed to load course');
       } finally {
@@ -59,6 +72,24 @@ export default function CourseDetail() {
     }
   };
 
+  const handleSubmitReview = async () => {
+    try {
+      setSubmitError('');
+      setIsSubmitting(true);
+      const newReview = await api.post(`/reviews/${id}`, { 
+        rating: reviewRating, 
+        comment: reviewComment 
+      });
+      setReviews([newReview, ...reviews]);
+      setShowReviewForm(false);
+      setReviewComment('');
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to submit review');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-[#F5F0EB] flex items-center justify-center">
       <div className="flex flex-col items-center">
@@ -79,6 +110,13 @@ export default function CourseDetail() {
   );
 
   const lessons = course.lessons || [];
+  const quizzes = course.quizzes || [];
+
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+  const hasReviewed = safeReviews.some(r => r.userId === user?.id);
+  const averageRating = safeReviews.length > 0 
+    ? (safeReviews.reduce((acc, r) => acc + (r.rating || 0), 0) / safeReviews.length).toFixed(1)
+    : '0.0';
 
   return (
     <div className="bg-[#F5F0EB] min-h-screen pb-32">
@@ -157,7 +195,10 @@ export default function CourseDetail() {
 
         {/* Overview Tab Content */}
         {activeTab === 'OVERVIEW' && (
-          <div className="space-y-0 border border-[#EAE4DD] border-b-0 bg-[#FFFFFF]">
+          <div className="space-y-0 border border-[#EAE4DD] bg-[#FFFFFF]">
+            <div className="bg-[#F5F0EB]/30 p-4 border-b border-[#EAE4DD]">
+              <h3 className="text-[10px] uppercase tracking-widest font-black text-[#8A817C]">Curriculum — {lessons.length} Modules</h3>
+            </div>
             {lessons.length > 0 ? lessons.map((lesson, idx) => (
               <div key={lesson.id} className="border-b border-[#EAE4DD] last:border-0">
                 <div 
@@ -237,6 +278,35 @@ export default function CourseDetail() {
                 <p className="text-[12px] font-bold text-[#8A817C] uppercase tracking-widest">The curriculum is currently being architected.</p>
               </div>
             )}
+
+            {/* Quizzes Section */}
+            {quizzes.length > 0 && (
+              <>
+                <div className="bg-[#F5F0EB]/30 p-4 border-b border-[#EAE4DD] border-t border-[#EAE4DD]">
+                  <h3 className="text-[10px] uppercase tracking-widest font-black text-[#8A817C]">Knowledge Checks — {quizzes.length} Quizzes</h3>
+                </div>
+                {quizzes.map((quiz, idx) => (
+                  <div key={quiz.id} className="border-b border-[#EAE4DD] last:border-b-0">
+                    <div className="flex items-center justify-between p-6 hover:bg-[#F0EBE6] transition-colors group">
+                      <div className="flex items-center space-x-6">
+                        <div className="text-[12px] font-bold text-[#FB460D] font-mono">
+                          Q{(idx + 1).toString().padStart(2, '0')}
+                        </div>
+                        <div>
+                          <h3 className="text-[15px] font-bold text-[#141314]">{quiz.title}</h3>
+                          <p className="text-[10px] text-[#8A817C] font-bold tracking-widest uppercase mt-1">
+                            {quiz.questions?.length || 0} QUESTIONS · ASSESSMENT
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" className="!text-[10px] !py-2 border-[#141314]" onClick={() => navigate(`/courses/${course.id}/quiz/${quiz.id}`)}>
+                        TAKE QUIZ
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
 
@@ -245,27 +315,81 @@ export default function CourseDetail() {
           <div ref={reviewsRef}>
             <div className="flex items-end justify-between mb-12">
               <div className="flex items-baseline space-x-4">
-                <span className="text-[64px] font-[800] text-[#FB460D] leading-none tracking-tighter">4.8</span>
-                <span className="text-[12px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">OUT OF 5 · 120 REVIEWS</span>
+                <span className="text-[64px] font-[800] text-[#FB460D] leading-none tracking-tighter">{averageRating}</span>
+                <span className="text-[12px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">OUT OF 5 · {safeReviews.length} REVIEWS</span>
               </div>
-              <Button variant="ghost">ADD REVIEW +</Button>
+              {!hasReviewed && (
+                <Button variant="ghost" onClick={() => setShowReviewForm(!showReviewForm)}>
+                  {showReviewForm ? 'CANCEL' : 'ADD REVIEW +'}
+                </Button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[1,2,3,4].map(r => (
-                <div key={r} className="review-card bg-[#FFFFFF] border border-[#EAE4DD] p-6 hover:border-[#FB460D]/20 transition-colors">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-[#FB460D]/20 text-[#FB460D] font-bold text-[12px] flex items-center justify-center">JD</div>
-                    <div>
-                      <p className="text-[13px] font-bold text-[#141314]">John Doe</p>
-                      <div className="text-[#FB460D] text-[10px] mt-1">★ ★ ★ ★ ★</div>
+            {showReviewForm && (
+              <div className="mb-12 bg-white border border-[#EAE4DD] p-8 animate-in fade-in slide-in-from-top-4">
+                <h3 className="text-[14px] font-black text-[#141314] uppercase tracking-widest mb-6 border-b border-[#EAE4DD] pb-4">Write a Review</h3>
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 mb-6 text-sm">
+                    {submitError}
+                  </div>
+                )}
+                <div className="mb-6">
+                  <label className="block text-[10px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">Rating</label>
+                  <select 
+                    value={reviewRating} 
+                    onChange={e => setReviewRating(Number(e.target.value))}
+                    className="w-full border border-[#EAE4DD] p-3 text-[14px] bg-transparent focus:outline-none focus:border-[#FB460D] transition-colors"
+                  >
+                    {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} Stars</option>)}
+                  </select>
+                </div>
+                <div className="mb-8">
+                  <label className="block text-[10px] font-bold text-[#8A817C] tracking-widest uppercase mb-2">Comment (Optional)</label>
+                  <textarea 
+                    value={reviewComment} 
+                    onChange={e => setReviewComment(e.target.value)}
+                    rows="3"
+                    className="w-full border border-[#EAE4DD] p-3 text-[14px] bg-transparent focus:outline-none focus:border-[#FB460D] transition-colors resize-none"
+                    placeholder="Share your experience with this course..."
+                  />
+                </div>
+                <Button onClick={handleSubmitReview} disabled={isSubmitting} className="w-full md:w-auto">
+                  {isSubmitting ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
+                </Button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-6">
+              {safeReviews.map(r => (
+                <div key={r.id} className="review-card bg-[#FFFFFF] border border-[#EAE4DD] p-8 hover:border-[#FB460D]/20 transition-colors">
+                  <div className="flex items-center justify-between mb-4 border-b border-[#EAE4DD] pb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 rounded-full bg-[#FB460D]/10 text-[#FB460D] font-bold text-[12px] flex items-center justify-center uppercase">
+                        {(r.user?.username || 'U').substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-bold text-[#141314]">{r.user?.username || 'Anonymous'}</p>
+                        <div className="text-[#8A817C] text-[10px] mt-1 font-mono">{new Date(r.createdAt).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-[12px] ${i < r.rating ? 'text-[#FB460D]' : 'text-[#EAE4DD]'}`}>★</span>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-[#8A817C] text-[14px] leading-relaxed">
-                    "This course completely transformed the way I think about architecture. The brutalist design of this platform also makes the learning experience incredibly immersive."
-                  </p>
+                  {r.comment && (
+                    <p className="text-[#8A817C] text-[14px] leading-relaxed">
+                      "{r.comment}"
+                    </p>
+                  )}
                 </div>
               ))}
+              {safeReviews.length === 0 && (
+                <div className="text-center py-12 border border-[#EAE4DD] bg-white">
+                  <p className="text-[12px] font-bold text-[#8A817C] uppercase tracking-widest">No reviews yet.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

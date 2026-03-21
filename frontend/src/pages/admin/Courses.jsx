@@ -133,6 +133,12 @@ export default function Courses() {
           </div>
         )}
 
+        {course.price > 0 && (
+          <div className="absolute -left-8 top-6 bg-[#FB460D] text-white text-[10px] font-bold py-1 px-8 transform -rotate-45 z-10 shadow-sm tracking-wider">
+            ₹{course.price}
+          </div>
+        )}
+
         {/* Course Cover Image */}
         <div className="h-32 -mx-5 -mt-5 mb-4 bg-[#F5F0EB] overflow-hidden border-b border-[#EAE4DD]">
           {course.imageUrl ? (
@@ -153,6 +159,22 @@ export default function Courses() {
           
           <div className="flex flex-col space-y-2">
             <button 
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  await api.put(`/courses/${course.id}`, { isPublished: !course.isPublished });
+                  setCourses(prev => prev.map(c => c.id === course.id ? { ...c, isPublished: !c.isPublished } : c));
+                } catch (err) { console.error('Failed to toggle publish', err); }
+              }}
+              className={`px-3 py-1 text-[11px] font-medium border rounded-full transition-colors flex items-center justify-center ${
+                course.isPublished 
+                  ? 'border-green-600 text-green-600 hover:bg-green-600 hover:text-white' 
+                  : 'border-[#FB460D] text-[#FB460D] hover:bg-[#FB460D] hover:text-white'
+              }`}
+            >
+              {course.isPublished ? 'Unpublish' : 'Publish'}
+            </button>
+            <button 
               onClick={() => handleShare(course.id)}
               className="px-3 py-1 text-[11px] font-medium border border-[#141314] rounded-full hover:bg-[#141314] hover:text-white transition-colors flex items-center justify-center"
             >
@@ -171,7 +193,7 @@ export default function Courses() {
           {course.tags && course.tags.map((tag, idx) => (
             <div key={idx} className="flex items-center text-[10px] text-[#FB460D] border border-[#FB460D]/30 bg-[#FB460D]/5 rounded px-2 py-0.5">
               <span>{tag}</span>
-              {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
+              {(user.role === 'ADMIN') && (
                 <button 
                   onClick={() => removeTag(course.id, tag)}
                   className="ml-1 hover:text-black focus:outline-none"
@@ -254,17 +276,17 @@ export default function Courses() {
         ) : (
           <div className="w-full bg-white border border-[#EAE4DD] rounded-lg overflow-hidden">
             <div className="grid grid-cols-12 gap-4 p-4 border-b border-[#EAE4DD] text-[11px] uppercase tracking-widest text-[#8A817C] font-bold bg-[#F5F0EB]/50">
-              <div className="col-span-5">Course Title</div>
+              <div className="col-span-4">Course Title</div>
               <div className="col-span-2">Tags</div>
               <div className="col-span-1 text-center">Views</div>
-              <div className="col-span-1 text-center">Contents</div>
+              <div className="col-span-1 text-center">Price</div>
               <div className="col-span-1 text-center">Duration</div>
-              <div className="col-span-1 text-center">Status</div>
+              <div className="col-span-2 text-center">Status</div>
               <div className="col-span-1 text-right">Action</div>
             </div>
             {filtered.map(c => (
               <div key={c.id} className="course-row grid grid-cols-12 gap-4 p-4 border-b border-[#EAE4DD] items-center text-[13px] interactive hover:bg-[#F5F0EB]/30 transition-colors">
-                <div className="col-span-5 flex items-center space-x-4">
+                <div className="col-span-4 flex items-center space-x-4">
                   <div className="w-10 h-10 bg-[#F5F0EB] rounded overflow-hidden flex-shrink-0 border border-[#EAE4DD]">
                     {c.imageUrl ? (
                       <img src={`http://localhost:3000${c.imageUrl}`} alt="" className="w-full h-full object-cover" />
@@ -281,9 +303,11 @@ export default function Courses() {
                   {c.tags && c.tags.length > 2 && <span className="text-[9px] bg-[#EAE4DD] px-1.5 py-0.5 rounded">+{c.tags.length - 2}</span>}
                 </div>
                 <div className="col-span-1 text-center text-[#8A817C] font-medium">{c.views || 0}</div>
-                <div className="col-span-1 text-center text-[#8A817C] font-medium">{c.lessonsCount || 0}</div>
+                <div className="col-span-1 text-center font-bold text-[#FB460D]">
+                  {c.price > 0 ? `₹${c.price}` : 'Free'}
+                </div>
                 <div className="col-span-1 text-center text-[#8A817C] font-medium">{c.duration || '-'}</div>
-                <div className="col-span-1 text-center">
+                <div className="col-span-2 text-center">
                   {c.isPublished ? (
                     <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold">PUB</span>
                   ) : (

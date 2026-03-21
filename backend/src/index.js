@@ -8,6 +8,9 @@ import courseRoutes from "./routes/course.routes.js"
 import uploadRoutes from "./routes/upload.routes.js"
 import lessonRoutes from "./routes/lesson.routes.js"
 import learnerRoutes from "./routes/learner.routes.js"
+import quizRoutes from "./routes/quiz.routes.js"
+import reportingRoutes from "./routes/reporting.routes.js"
+import reviewRoutes from "./routes/review.routes.js"
 import cookieParser from "cookie-parser"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -41,6 +44,9 @@ app.use("/api/courses", courseRoutes)
 app.use("/api/upload", uploadRoutes)
 app.use("/api/lessons", lessonRoutes)
 app.use("/api/learner", learnerRoutes)
+app.use("/api/quizzes", quizRoutes)
+app.use("/api/reporting", reportingRoutes)
+app.use("/api/reviews", reviewRoutes)
 
 const PORT = process.env.PORT || 3000
 
