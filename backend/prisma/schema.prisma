@@ -25,19 +25,19 @@ model Course {
   title        String
   description  String?
   isPublished  Boolean      @default(false)
-  website      String?
-  imageUrl     String?
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @default(now()) @updatedAt
   createdBy    String
   duration     String?
   lessonsCount Int          @default(0)
   tags         String[]     @default([])
   views        Int          @default(0)
+  imageUrl     String?
+  updatedAt    DateTime     @default(now()) @updatedAt
+  website      String?
   instructor   User         @relation("InstructorCourses", fields: [createdBy], references: [id])
+  enrollments  Enrollment[]
   lessons      Lesson[]
   quizzes      Quiz[]
-  enrollments  Enrollment[]
 }
 
 model Lesson {
@@ -48,28 +48,28 @@ model Lesson {
   status    String   @default("not-started")
   order     Int      @default(0)
   courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id])
 }
 
 model Quiz {
   id        String     @id @default(uuid())
   title     String
   courseId  String
-  course    Course     @relation(fields: [courseId], references: [id])
-  questions Question[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  questions Question[]
+  course    Course     @relation(fields: [courseId], references: [id])
 }
 
 model Question {
-  id        String   @id @default(uuid())
-  text      String
-  options   String[]
-  answer    Int
-  quizId    String
-  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  id      String   @id @default(uuid())
+  text    String
+  options String[]
+  answer  Int
+  quizId  String
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
 }
 
 model Enrollment {

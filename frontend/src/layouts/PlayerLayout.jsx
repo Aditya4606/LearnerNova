@@ -27,7 +27,7 @@ export default function PlayerLayout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#141314] overflow-hidden">
+    <div className="flex min-h-screen w-full bg-[#141314]">
       <PageTransition />
       
       {/* Sidebar */}
@@ -69,7 +69,7 @@ export default function PlayerLayout() {
       {/* Main Area */}
       <div 
         ref={mainRef}
-        className="flex-1 flex flex-col h-full bg-[#F5F0EB] relative z-10 w-full ml-[280px]"
+        className="flex-1 flex flex-col bg-[#F5F0EB] relative z-10 w-full ml-[280px]"
       >
         <button 
           onClick={toggleSidebar}

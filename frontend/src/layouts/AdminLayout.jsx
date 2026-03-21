@@ -28,14 +28,14 @@ export default function AdminLayout() {
   const activePage = navItems.find(item => location.pathname.includes(item.path))?.label || 'Dashboard';
 
   return (
-    <div className="flex h-screen w-full bg-[#F5F0EB] overflow-hidden">
+    <div className="flex min-h-screen w-full bg-[#F5F0EB]">
       <PageTransition />
       
       {/* Sidebar */}
-      <div className="w-[240px] flex-shrink-0 bg-[#141314] border-r border-[#EAE4DD] flex flex-col justify-between">
+      <div className="w-[240px] flex-shrink-0 bg-[#141314] border-r border-[#EAE4DD] flex flex-col justify-between h-screen sticky top-0">
         <div>
           <div className="p-8 pb-12">
-            <h1 className="text-[13px] tracking-[0.2em] font-bold text-[#141314] uppercase">LEARNOVA</h1>
+            <h1 className="text-[13px] tracking-[0.2em] font-bold text-[#FFFFFF] uppercase">LEARNOVA</h1>
             <p className="text-[9px] text-[#8A817C] mt-1 tracking-widest uppercase">Instructor Admin</p>
           </div>
           
@@ -46,7 +46,7 @@ export default function AdminLayout() {
                 <NavLink 
                   key={item.label}
                   to={item.path}
-                  className={`flex items-center space-x-3 px-8 py-4 text-[11px] tracking-widest uppercase relative interactive ${isActive ? 'text-[#FB460D]' : 'text-[#8A817C] hover:text-[#141314]'}`}
+                  className={`flex items-center space-x-3 px-8 py-4 text-[11px] tracking-widest uppercase relative interactive ${isActive ? 'text-[#FB460D]' : 'text-[#8A817C] hover:text-[#FFFFFF]'}`}
                 >
                   <span className="opacity-70">{item.icon}</span>
                   <span className="font-semibold">{item.label}</span>
@@ -59,13 +59,13 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        <div className="p-8 border-t border-[#EAE4DD]">
+        <div className="p-8 border-t border-white/10">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-8 h-8 rounded-full bg-[#FB460D] text-white flex items-center justify-center text-[10px] font-bold">
               {initials}
             </div>
             <div className="truncate">
-              <p className="text-[12px] font-semibold text-[#141314] truncate">{user?.name}</p>
+              <p className="text-[12px] font-semibold text-white truncate">{user?.username}</p>
             </div>
           </div>
           <button 
@@ -78,9 +78,9 @@ export default function AdminLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <header className="h-[72px] bg-[#F5F0EB] border-b border-[#EAE4DD] px-8 flex items-center justify-between flex-shrink-0">
+        <header className="h-[72px] bg-[#F5F0EB]/80 backdrop-blur-md border-b border-[#EAE4DD] px-8 flex items-center justify-between sticky top-0 z-[100]">
           <div className="flex items-center">
             <h2 className="text-[18px] font-semibold text-[#141314] capitalize">{activePage}</h2>
             <span className="text-[#EAE4DD] mx-4">/</span>
@@ -93,7 +93,7 @@ export default function AdminLayout() {
         </header>
         
         {/* Page Viewport */}
-        <main className="flex-1 overflow-y-auto relative bg-[#F5F0EB]">
+        <main className="flex-1 relative">
           <Outlet />
         </main>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Play, CheckCircle2, Circle, MessageSquare } from 'lucide-react';
+import { Play, CheckCircle2, Circle, MessageSquare, Download, Link as LinkIcon, ChevronDown } from 'lucide-react';
 import { api } from '../../api';
 import Button from '../../components/Button';
 
@@ -14,6 +14,7 @@ export default function CourseDetail() {
   const [error, setError] = useState(null);
   
   const [activeTab, setActiveTab] = useState('OVERVIEW');
+  const [expandedLessonId, setExpandedLessonId] = useState(null);
   const tabsRef = useRef(null);
   const tabUnderlineRef = useRef(null);
   const reviewsRef = useRef(null);
@@ -158,28 +159,78 @@ export default function CourseDetail() {
         {activeTab === 'OVERVIEW' && (
           <div className="space-y-0 border border-[#EAE4DD] border-b-0 bg-[#FFFFFF]">
             {lessons.length > 0 ? lessons.map((lesson, idx) => (
-              <div 
-                key={lesson.id}
-                onClick={() => navigate(`/courses/${course.id}/lesson/${lesson.id}`)}
-                className="flex items-center justify-between p-6 border-b border-[#EAE4DD] interactive cursor-pointer hover:bg-[#F0EBE6] transition-colors group"
-              >
-                <div className="flex items-center space-x-6">
-                  <div className="text-[12px] font-bold text-[#8A817C] font-mono group-hover:text-[#FB460D] transition-colors">
-                    {(idx + 1).toString().padStart(2, '0')}
+              <div key={lesson.id} className="border-b border-[#EAE4DD] last:border-0">
+                <div 
+                  onClick={() => setExpandedLessonId(expandedLessonId === lesson.id ? null : lesson.id)}
+                  className={`flex items-center justify-between p-6 interactive cursor-pointer hover:bg-[#F0EBE6] transition-colors group ${expandedLessonId === lesson.id ? 'bg-[#F0EBE6]' : ''}`}
+                >
+                  <div className="flex items-center space-x-6">
+                    <div className="text-[12px] font-bold text-[#8A817C] font-mono group-hover:text-[#FB460D] transition-colors">
+                      {(idx + 1).toString().padStart(2, '0')}
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-bold text-[#141314]">{lesson.title}</h3>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <span className="text-[10px] text-[#8A817C] font-bold tracking-widest uppercase">{lesson.type}</span>
+                        {lesson.duration && (
+                          <>
+                            <span className="w-1 h-1 rounded-full bg-[#EAE4DD]"></span>
+                            <span className="text-[10px] text-[#8A817C] font-bold tracking-widest uppercase">{lesson.duration}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-[15px] font-bold text-[#141314]">{lesson.title}</h3>
-                    <p className="text-[10px] text-[#8A817C] font-bold tracking-widest uppercase mt-1">
-                      {lesson.type}
-                    </p>
+                  
+                  <div className="flex items-center space-x-4">
+                    {lesson.status === 'completed' && <CheckCircle2 size={20} className="text-[#10B981]" />}
+                    <div className={`transform transition-transform duration-300 ${expandedLessonId === lesson.id ? 'rotate-180' : ''}`}>
+                      <Circle size={20} className="text-[#8A817C]" />
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  {lesson.status === 'completed' && <CheckCircle2 size={24} className="text-[#10B981]" />}
-                  {lesson.status === 'in-progress' && <div className="w-8 h-8 rounded-full border border-[#FB460D] flex items-center justify-center bg-[#FB460D]/10"><Play size={12} className="text-[#FB460D] ml-1" /></div>}
-                  {lesson.status === 'not-started' && <Circle size={24} className="text-[#8A817C]" />}
-                </div>
+
+                {expandedLessonId === lesson.id && (
+                  <div className="p-8 bg-[#F5F0EB]/50 border-t border-[#EAE4DD] animate-in slide-in-from-top-2 duration-300">
+                    {lesson.description && (
+                      <div className="mb-8">
+                        <h4 className="text-[10px] uppercase text-[#FB460D] tracking-[0.2em] font-bold mb-4">Lesson Overview</h4>
+                        <p className="text-[14px] text-[#8A817C] leading-relaxed whitespace-pre-wrap">{lesson.description}</p>
+                      </div>
+                    )}
+
+                    {lesson.attachments && lesson.attachments.length > 0 && (
+                      <div>
+                        <h4 className="text-[10px] uppercase text-[#FB460D] tracking-[0.2em] font-bold mb-4">Resources & Attachments</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {lesson.attachments.map((attach) => (
+                            <a 
+                              key={attach.id} 
+                              href={attach.url.startsWith('http') ? attach.url : `http://localhost:3000${attach.url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center p-4 bg-white border border-[#EAE4DD] hover:border-[#FB460D]/30 transition-colors group"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-[#FB460D]/10 text-[#FB460D] flex items-center justify-center mr-4 group-hover:bg-[#FB460D] group-hover:text-white transition-colors">
+                                {attach.type === 'FILE' ? <Download size={14} /> : <LinkIcon size={14} />}
+                              </div>
+                              <div className="flex-1 overflow-hidden">
+                                <p className="text-[12px] font-bold text-[#141314] truncate">{attach.title}</p>
+                                <p className="text-[9px] text-[#8A817C] uppercase tracking-wider">{attach.type}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex justify-end">
+                      <Button variant="ghost" className="!text-[10px] !py-2" onClick={() => navigate(`/courses/${course.id}/lesson/${lesson.id}`)}>
+                        <Play size={12} className="mr-2" /> ENTER MODULE
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )) : (
               <div className="p-12 text-center border-b border-[#EAE4DD]">

@@ -17,9 +17,9 @@ export const protect = (req, res, next) => {
 };
 
 export const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'ADMIN') {
+  if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPERADMIN' || req.user.role === 'INSTRUCTOR')) {
     next();
   } else {
-    res.status(403).json({ message: "Not authorized as an admin" });
+    res.status(403).json({ message: "Not authorized as an admin or instructor" });
   }
 };

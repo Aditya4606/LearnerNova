@@ -35,9 +35,9 @@ export const api = {
     return data;
   },
 
-  async upload(path, formData) {
+  async upload(path, formData, method = 'POST') {
     const res = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
+      method,
       credentials: 'include',
       // Do NOT set Content-Type header here. The browser will automatically set it to 
       // multipart/form-data with the correct boundary.

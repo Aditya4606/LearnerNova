@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
+import { api } from '../../api';
 import { MOCK_COURSES } from '../../mockData';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/Input';
@@ -13,6 +14,7 @@ export default function MyCourses() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [courses, setCourses] = useState([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   
   const heroRef = useRef(null);

@@ -7,6 +7,7 @@ import Input from '../../components/Input';
 import Toggle from '../../components/Toggle';
 import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
+import LessonModal from './LessonModal';
 import { api } from '../../api';
 
 export default function CourseForm() {
@@ -34,6 +35,26 @@ export default function CourseForm() {
   const [newTag, setNewTag] = useState('');
   const [instructors, setInstructors] = useState([]);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
+  const fetchCourse = async () => {
+    try {
+      const data = await api.get(`/courses/${id}`);
+      setCourse(data);
+    } catch (err) {
+      console.error("Failed to refresh course", err);
+    }
+  };
+
+  const deleteLesson = async (lessonId) => {
+    if (!window.confirm("Are you sure you want to delete this lesson? This action cannot be undone.")) return;
+    try {
+      await api.delete(`/lessons/${lessonId}`);
+      fetchCourse();
+    } catch (err) {
+      console.error("Failed to delete lesson", err);
+    }
+  };
 
   const tabsRef = useRef(null);
   const tabUnderlineRef = useRef(null);
@@ -122,7 +143,7 @@ export default function CourseForm() {
   );
 
   return (
-    <div className="h-full flex flex-col relative bg-[#F5F0EB] overflow-y-auto pb-32">
+    <div className="flex flex-col relative bg-[#F5F0EB] pb-32">
       {/* Sticky Top Bar */}
       <div className="sticky top-0 z-50 bg-[#F5F0EB]/90 backdrop-blur border-b border-[#EAE4DD] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -195,9 +216,20 @@ export default function CourseForm() {
                         <p className="text-[14px] text-[#141314] font-semibold">{lesson.title}</p>
                       </div>
                       <Badge variant="default" className="!text-[9px] uppercase">{lesson.type}</Badge>
-                      <button className="text-[#8A817C] hover:text-[#FB460D] interactive ml-4">
-                        <MoreVertical size={16} />
-                      </button>
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => { setSelectedLesson(lesson); setLessonModal(true); }}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-[#FB460D] uppercase tracking-widest"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => deleteLesson(lesson.id)}
+                          className="text-[10px] font-bold text-[#8A817C] hover:text-red-500 uppercase tracking-widest"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   )) : (
                     <div className="py-20 text-center">
@@ -370,77 +402,19 @@ export default function CourseForm() {
         </div>
       </div>
 
-      <LessonModal isOpen={lessonModal} onClose={() => setLessonModal(false)} courseId={id} onAdded={id !== 'new' ? () => api.get(`/courses/${id}`).then(setCourse) : null} />
+      <LessonModal 
+        isOpen={lessonModal} 
+        onClose={() => { setLessonModal(false); setSelectedLesson(null); }} 
+        courseId={id} 
+        lesson={selectedLesson}
+        onSave={() => fetchCourse()} 
+      />
       <AttendeesModal isOpen={attendeesModal} onClose={() => setAttendeesModal(false)} courseId={id} />
       <ContactModal isOpen={contactModal} onClose={() => setContactModal(false)} courseId={id} />
     </div>
   );
 }
 
-function LessonModal({ isOpen, onClose, courseId, onAdded }) {
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState('video');
-  const [loading, setLoading] = useState(false);
-  
-  const handleSave = async () => {
-    if (!title.trim()) return;
-    try {
-      setLoading(true);
-      await api.post(`/courses/${courseId}/lessons`, { 
-        title: title.trim(), 
-        type: type,
-        content: type === 'text' ? 'Start typing your lesson content here...' : ''
-      });
-      onClose();
-      setTitle('');
-      if (onAdded) onAdded();
-    } catch (err) {
-      console.error("Failed to add lesson:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#EAE4DD]">
-        <h2 className="text-[18px] font-bold text-white uppercase tracking-wider">New Lesson Module</h2>
-      </div>
-      
-      <div className="space-y-6 text-white">
-        <Input 
-          label="LESSON TITLE" 
-          placeholder="e.g. Introduction to Odoo" 
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-white border-white/20"
-        />
-        
-        <div>
-          <label className="text-[10px] uppercase text-[#FB460D] tracking-widest mb-3 block">LESSON TYPE</label>
-          <div className="grid grid-cols-4 gap-4">
-            {['video', 'text', 'pdf', 'quiz'].map((t) => (
-              <button 
-                key={t} 
-                onClick={() => setType(t)}
-                className={`p-4 border text-center interactive cursor-pointer font-bold tracking-widest text-[10px] uppercase transition-colors ${type === t ? 'border-[#FB460D] text-[#FB460D] bg-[#FB460D]/10' : 'border-white/20 text-white/60 hover:border-white/40'}`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-end space-x-4 mt-12 pt-6 border-t border-white/10">
-        <Button variant="ghost" className="!text-white hover:!bg-white/10" onClick={onClose}>CANCEL</Button>
-        <Button onClick={handleSave} disabled={loading || !title.trim()}>
-          {loading ? 'ARCHITECTING...' : 'SAVE MODULE'}
-        </Button>
-      </div>
-    </Modal>
-  );
-}
 
 function AttendeesModal({ isOpen, onClose, courseId }) {
   const [email, setEmail] = useState('');

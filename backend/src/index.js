@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js"
 import userRoutes from "./routes/user.routes.js"
 import courseRoutes from "./routes/course.routes.js"
 import uploadRoutes from "./routes/upload.routes.js"
+import lessonRoutes from "./routes/lesson.routes.js"
 import cookieParser from "cookie-parser"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -37,6 +38,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/courses", courseRoutes)
 app.use("/api/upload", uploadRoutes)
+app.use("/api/lessons", lessonRoutes)
 
 const PORT = process.env.PORT || 3000
 

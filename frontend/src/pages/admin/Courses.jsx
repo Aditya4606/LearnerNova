@@ -203,7 +203,7 @@ export default function Courses() {
   };
 
   return (
-    <div className="p-12 max-w-7xl mx-auto h-full flex flex-col relative">
+    <div className="p-12 max-w-7xl mx-auto flex flex-col relative">
       {/* Header */}
       <div className="flex items-end justify-between mb-16 relative">
         <div className="relative">
@@ -242,7 +242,7 @@ export default function Courses() {
       </div>
 
       {/* Content */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto pb-20 relative">
+      <div ref={containerRef} className="pb-20 relative">
         {loading ? (
           <div className="flex justify-center items-center h-full text-[#8A817C]">Loading courses...</div>
         ) : filtered.length === 0 ? (
