@@ -43,6 +43,8 @@ if (!passwordRegex.test(password)) {
     // ✅ store token in cookie
     res.cookie("token", token, {
       httpOnly: true,
+      secure: false, // development
+      sameSite: "lax",
     });
 
     res.json({
@@ -78,6 +80,8 @@ export const login = async (req, res) => {
     // ✅ store token in cookie
     res.cookie("token", token, {
       httpOnly: true,
+      secure: false, // development
+      sameSite: "lax",
     });
 
     res.json({
