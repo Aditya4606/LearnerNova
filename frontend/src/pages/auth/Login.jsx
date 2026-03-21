@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/Input';
@@ -12,7 +12,10 @@ export default function Login() {
   const [error, setError] = useState('');
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  
+  const from = location.state?.from?.pathname || null;
   
   const textContainer = useRef(null);
   const formContainer = useRef(null);
