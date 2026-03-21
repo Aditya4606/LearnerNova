@@ -1,19 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
+import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import PageTransition from '../../components/PageTransition';
 import { Check } from 'lucide-react';
 
 export default function Signup() {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
   const [_success, setSuccess] = useState(false);
   
   const navigate = useNavigate();
+  const { signup } = useAuth();
   
   const textContainer = useRef(null);
   const formContainer = useRef(null);
@@ -33,20 +36,32 @@ export default function Signup() {
     );
   }, []);
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setSuccess(true);
-    
-    // Animate form out and success in
-    gsap.to(formContainer.current, { opacity: 0, scale: 0.95, duration: 0.4, display: 'none' });
-    gsap.fromTo(successContainer.current, 
-      { opacity: 0, scale: 0.8 },
-      { opacity: 1, scale: 1, duration: 0.6, delay: 0.4, display: 'flex', ease: 'back.out(1.5)' }
-    );
+    setError('');
 
-    setTimeout(() => {
-      navigate('/login');
-    }, 2500);
+    if (password !== confirm) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    try {
+      await signup(email, username, password);
+      setSuccess(true);
+    
+      // Animate form out and success in
+      gsap.to(formContainer.current, { opacity: 0, scale: 0.95, duration: 0.4, display: 'none' });
+      gsap.fromTo(successContainer.current, 
+        { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.6, delay: 0.4, display: 'flex', ease: 'back.out(1.5)' }
+      );
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 2500);
+    } catch (err) {
+      setError(err.message || 'Signup failed.');
+    }
   };
 
   const rawText = "JOIN US";
@@ -87,10 +102,12 @@ export default function Signup() {
             </h2>
           </div>
           
-          <Input type="text" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} />
+          <Input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
           <Input type="email" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
           <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
           <Input type="password" placeholder="Confirm Password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+          
+          {error && <p className="text-[12px] text-[#FB460D]">{error}</p>}
           
           <div className="pt-4">
             <Button type="submit" className="w-full">

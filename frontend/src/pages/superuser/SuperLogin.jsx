@@ -34,17 +34,18 @@ export default function SuperLogin() {
       .to(flickerRef.current, { opacity: 1, duration: 2 });
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const u = login(email, password);
-      if (u.role === 'superuser') {
+      const u = await login(email, password);
+      if (u.role === 'ADMIN') {
         navigate('/superuser/dashboard');
       } else {
         setError('Unauthorized access level.');
       }
-    } catch {
-      setError('Invalid credentials.');
+    } catch (err) {
+      setError(err.message || 'Invalid credentials.');
     }
   };
 

@@ -37,8 +37,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (!user) return <Navigate to="/login" replace />;
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'superuser') return <Navigate to="/superuser/dashboard" replace />;
-    if (user.role === 'admin') return <Navigate to="/admin/courses" replace />;
+    if (user.role === 'ADMIN') return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'INSTRUCTOR') return <Navigate to="/admin/courses" replace />;
     return <Navigate to="/courses" replace />;
   }
   return children;
@@ -87,29 +87,30 @@ function App() {
             <Route path="/superuser/login" element={<SuperLogin />} />
             
             {/* SuperUser Routes */}
-            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['superuser']}><SuperUserLayout /></ProtectedRoute>}>
+            <Route path="/superuser" element={<ProtectedRoute allowedRoles={['ADMIN']}><SuperUserLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<Users />} />
               <Route path="users" element={<Users />} />
               <Route path="" element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN', 'INSTRUCTOR']}><AdminLayout /></ProtectedRoute>}>
+              <Route path="dashboard" element={<Courses />} />
               <Route path="courses" element={<Courses />} />
               <Route path="courses/:id/edit" element={<CourseForm />} />
               <Route path="courses/:id/quiz/:qid" element={<QuizBuilder />} />
               <Route path="reporting" element={<Reporting />} />
-              <Route path="" element={<Navigate to="courses" replace />} />
+              <Route path="" element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Learner Routes */}
-            <Route path="/courses" element={<ProtectedRoute allowedRoles={['learner', 'admin']}><LearnerLayout /></ProtectedRoute>}>
+            <Route path="/courses" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><LearnerLayout /></ProtectedRoute>}>
               <Route index element={<MyCourses />} />
               <Route path=":id" element={<CourseDetail />} />
             </Route>
 
             {/* Player Route */}
-            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['learner', 'admin']}><PlayerLayout /></ProtectedRoute>}>
+            <Route path="/courses/:id/lesson/:lid" element={<ProtectedRoute allowedRoles={['LEARNER', 'ADMIN', 'INSTRUCTOR']}><PlayerLayout /></ProtectedRoute>}>
               <Route index element={<LessonPlayer />} />
             </Route>
             

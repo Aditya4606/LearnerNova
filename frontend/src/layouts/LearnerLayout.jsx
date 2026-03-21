@@ -40,7 +40,8 @@ export default function LearnerLayout() {
     navigate('/login');
   };
 
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
+  const displayName = user?.username || user?.name || '';
+  const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
 
   return (
     <div className="min-h-screen bg-[#F5F0EB] w-full flex flex-col relative">
