@@ -69,7 +69,8 @@ export default function MyCourses() {
   const filtered = MOCK_COURSES.filter(c => c.status === 'PUBLISHED' && c.title.toLowerCase().includes(search.toLowerCase()));
 
   // Profile Data Mock
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
+  const displayName = user?.username || user?.name || '';
+  const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
 
   return (
     <div className="bg-[#F5F0EB] min-h-screen pb-32">
@@ -113,7 +114,7 @@ export default function MyCourses() {
                 {initials}
               </div>
               <div>
-                <h3 className="text-[18px] font-bold text-[#141314]">{user?.name}</h3>
+                <h3 className="text-[18px] font-bold text-[#141314]">{displayName}</h3>
                 <Badge variant="default" className="mt-1">LEARNER</Badge>
               </div>
             </div>

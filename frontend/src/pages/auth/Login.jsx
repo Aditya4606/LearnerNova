@@ -33,16 +33,16 @@ export default function Login() {
     );
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const user = login(email, password);
-      // Route guard in App.jsx handles standard redirect but let's be explicit
-      if (user.role === 'superuser') navigate('/superuser/dashboard');
-      else if (user.role === 'admin') navigate('/admin/courses');
+      const user = await login(email, password);
+      if (user.role === 'ADMIN') navigate('/admin/dashboard');
+      else if (user.role === 'INSTRUCTOR') navigate('/admin/courses');
       else navigate('/courses');
-    } catch {
-      setError('Invalid credentials. Check mockData.js');
+    } catch (err) {
+      setError(err.message || 'Invalid credentials.');
     }
   };
 

@@ -21,7 +21,8 @@ export default function AdminLayout() {
   ];
 
   // Helper to get initials
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AD';
+  const displayName = user?.username || user?.name || '';
+  const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'AD';
 
   // Get active page name
   const activePage = navItems.find(item => location.pathname.includes(item.path))?.label || 'Dashboard';
@@ -64,7 +65,7 @@ export default function AdminLayout() {
               {initials}
             </div>
             <div className="truncate">
-              <p className="text-[12px] font-semibold text-[#141314] truncate">{user?.name}</p>
+              <p className="text-[12px] font-semibold text-[#141314] truncate">{displayName}</p>
             </div>
           </div>
           <button 

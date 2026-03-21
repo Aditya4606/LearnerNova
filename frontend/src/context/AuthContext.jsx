@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { MOCK_USERS } from '../mockData';
+import { api } from '../api';
 
 const AuthContext = createContext();
 
@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage on mount
+    // On mount, check if user is already logged in via cookie
     const storedUser = localStorage.getItem('learnova_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -18,24 +18,32 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    const foundUser = MOCK_USERS.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('learnova_user', JSON.stringify(foundUser));
-      return foundUser;
-    }
-    throw new Error('Invalid credentials');
+  const login = async (email, password) => {
+    const data = await api.post('/auth/login', { email, password });
+    const u = data.user;
+    setUser(u);
+    localStorage.setItem('learnova_user', JSON.stringify(u));
+    return u;
   };
 
-  const logout = () => {
+  const signup = async (email, username, password) => {
+    const data = await api.post('/auth/signup', { email, username, password });
+    return data.user;
+  };
+
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', {});
+    } catch {
+      // ignore logout errors
+    }
     setUser(null);
     localStorage.removeItem('learnova_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+      {children}
     </AuthContext.Provider>
   );
 };

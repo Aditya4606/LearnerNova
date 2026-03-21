@@ -40,7 +40,8 @@ export default function LearnerLayout() {
     navigate('/login');
   };
 
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
+  const displayName = user?.username || user?.name || '';
+  const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'LR';
 
   return (
     <div className="min-h-screen bg-[#F5F0EB] w-full flex flex-col relative">
@@ -70,7 +71,7 @@ export default function LearnerLayout() {
           {user ? (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <span className="text-[12px] font-semibold text-[#141314] hidden sm:block">{user.name}</span>
+                <span className="text-[12px] font-semibold text-[#141314] hidden sm:block">{displayName}</span>
                 <div className="w-8 h-8 rounded-full bg-[#FB460D] text-white flex items-center justify-center text-[10px] font-bold">
                   {initials}
                 </div>
