@@ -15,15 +15,29 @@ export const getAllPublishedCourses = async (req, res) => {
       ];
     }
 
-    const courses = await prisma.course.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        instructor: { select: { username: true, email: true } },
-      },
-    });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
 
-    res.json(courses);
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          instructor: { select: { username: true, email: true } },
+        },
+      }),
+      prisma.course.count({ where: whereClause })
+    ]);
+
+    res.json({
+      courses,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      totalCourses: total
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

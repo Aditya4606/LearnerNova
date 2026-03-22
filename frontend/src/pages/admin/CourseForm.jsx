@@ -39,6 +39,12 @@ export default function CourseForm() {
   const [instructors, setInstructors] = useState([]);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
 
   const fetchCourse = async () => {
     try {
@@ -102,10 +108,24 @@ export default function CourseForm() {
       // Only send scalar fields, not nested relations (lessons, quizzes, instructor)
       const { title, description, isPublished, website, imageUrl, price, tags, createdBy, views, duration, lessonsCount, visibility, accessRule } = course;
       await api.put(`/courses/${id}`, { title, description, isPublished, website, imageUrl, price, tags, createdBy, views, duration, lessonsCount, visibility, accessRule });
+      showToast('Course saved successfully!');
     } catch (err) {
       console.error("Failed to save course", err);
+      showToast(err.message || 'Failed to save course', 'error');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const togglePublish = async (val) => {
+    setCourse({...course, isPublished: val});
+    try {
+      await api.put(`/courses/${id}`, { isPublished: val });
+      showToast(val ? 'Course published successfully!' : 'Course unpublished successfully!');
+    } catch (err) {
+      console.error("Failed to toggle publish", err);
+      showToast('Failed to toggle publish state', 'error');
+      setCourse({...course, isPublished: !val}); // revert
     }
   };
 
@@ -168,7 +188,7 @@ export default function CourseForm() {
             <span className="text-[10px] uppercase font-bold text-[#8A817C] tracking-widest text-right">
               {course.isPublished ? 'PUBLISHED' : 'DRAFT'}
             </span>
-            <Toggle checked={course.isPublished} onChange={(val) => setCourse({...course, isPublished: val})} />
+            <Toggle checked={course.isPublished} onChange={togglePublish} />
           </div>
           <Button variant="ghost" className="!px-3 !py-1.5 !text-[10px]" onClick={() => window.open(`/courses/${id}`, '_blank')}>
             <Eye size={14} className="mr-2"/> PREVIEW
@@ -416,7 +436,7 @@ export default function CourseForm() {
                     <div className="w-6 h-6 border-2 border-[#FB460D] border-t-transparent animate-spin"></div>
                   ) : course.imageUrl ? (
                     <>
-                      <img src={`http://localhost:3000${course.imageUrl}`} alt="Course Cover" className="w-full h-full object-cover" />
+                      <img src={course.imageUrl.startsWith('http') ? course.imageUrl : `http://localhost:3000${course.imageUrl}`} alt="Course Cover" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
                         <ImageIcon size={24} className="text-white mb-2" />
                         <span className="text-[9px] font-bold text-white uppercase tracking-widest">CHANGE COVER</span>
@@ -520,6 +540,14 @@ export default function CourseForm() {
       />
       <AttendeesModal isOpen={attendeesModal} onClose={() => setAttendeesModal(false)} courseId={id} />
       <ContactModal isOpen={contactModal} onClose={() => setContactModal(false)} courseId={id} />
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[100] text-white px-6 py-3 rounded-none border shadow-2xl flex items-center space-x-3 animate-in fade-in slide-in-from-bottom-4 duration-300 ${toast.type === 'error' ? 'bg-red-600 border-red-500' : 'bg-[#141314] border-[#FB460D]'}`}>
+          {toast.type === 'success' && <div className="w-2 h-2 bg-[#FB460D] rounded-full animate-pulse"></div>}
+          <span className="text-[12px] font-bold uppercase tracking-widest">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

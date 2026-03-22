@@ -33,17 +33,23 @@ export default function MyCourses() {
   const [enrollments, setEnrollments] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const heroRef = useRef(null);
   const cardsRef = useRef(null);
   const pointsRef = useRef(null);
 
-  // Fetch published courses
-  const fetchCourses = async (searchTerm = '') => {
+  const fetchCourses = async (searchTerm = '', currentPage = 1) => {
     try {
-      const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
-      const data = await api.get(`/learner/courses${query}`);
-      setCourses(data);
+      const queryParams = new URLSearchParams({ page: currentPage, limit: 12 });
+      if (searchTerm) queryParams.set('search', searchTerm);
+      
+      const data = await api.get(`/learner/courses?${queryParams.toString()}`);
+      setCourses(data.courses || []);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error('Failed to fetch courses:', err);
     }
@@ -63,19 +69,20 @@ export default function MyCourses() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([fetchCourses(), fetchEnrollments()]);
+      await Promise.all([fetchCourses(search, page), fetchEnrollments()]);
       setLoading(false);
     };
     load();
   }, [user]);
 
-  // Debounced search
+  // Debounced search and page changes
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchCourses(search);
+      setLoading(true);
+      fetchCourses(search, page).finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, page]);
 
   // GSAP animations
   useEffect(() => {
@@ -181,7 +188,10 @@ export default function MyCourses() {
             <Input
               placeholder="SEARCH COURSES BY NAME..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1); // Reset to first page on new search
+              }}
             />
             <Search
               size={16}
@@ -206,6 +216,31 @@ export default function MyCourses() {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!loading && totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-4 mt-12 bg-[#FFFFFF] py-4 px-6 rounded-none border border-[#EAE4DD]">
+              <Button 
+                variant="ghost" 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="!px-4 !py-2"
+              >
+                Previous
+              </Button>
+              <span className="text-[12px] font-bold text-[#8A817C] uppercase tracking-widest">
+                Page <span className="text-[#141314]">{page}</span> of {totalPages}
+              </span>
+              <Button 
+                variant="ghost" 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="!px-4 !py-2"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Profile Panel */}
@@ -338,7 +373,7 @@ function CourseCard({ course, enrollment, user, navigate, onEnroll }) {
         <div className="h-40 mb-6 bg-[#F5F0EB] border border-[#EAE4DD]/50 relative overflow-hidden">
           {course.imageUrl ? (
             <img
-              src={`${baseUrl}${course.imageUrl}`}
+              src={course.imageUrl.startsWith('http') ? course.imageUrl : `${baseUrl}${course.imageUrl}`}
               alt={course.title}
               className="w-full h-full object-cover"
             />

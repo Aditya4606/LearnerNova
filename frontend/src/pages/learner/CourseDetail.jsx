@@ -141,7 +141,7 @@ export default function CourseDetail() {
           <div className="w-full md:w-[40%] min-h-[300px] border-r border-[#EAE4DD] bg-[#F5F0EB] relative flex items-center justify-center overflow-hidden">
              {course.imageUrl ? (
                <img 
-                 src={`http://localhost:3000${course.imageUrl}`} 
+                 src={course.imageUrl.startsWith('http') ? course.imageUrl : `http://localhost:3000${course.imageUrl}`} 
                  alt={course.title} 
                  className="w-full h-full object-cover"
                />

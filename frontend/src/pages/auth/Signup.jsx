@@ -7,6 +7,15 @@ import Button from '../../components/Button';
 import PageTransition from '../../components/PageTransition';
 import { Check } from 'lucide-react';
 
+const validatePassword = (pwd) => {
+  if (pwd.length < 8) return 'Password must be at least 8 characters long.';
+  if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
+  if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter.';
+  if (!/[0-9]/.test(pwd)) return 'Password must contain at least one number.';
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return 'Password must contain at least one special character.';
+  return null;
+};
+
 export default function Signup() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -39,6 +48,12 @@ export default function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
 
     if (password !== confirm) {
       setError('Passwords do not match.');

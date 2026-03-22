@@ -11,9 +11,7 @@ export const signup = async (req, res) => {
     const { email, username, password } = req.body;
     
     const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
+      where: {email},
     });
 
     if (existingUser) {

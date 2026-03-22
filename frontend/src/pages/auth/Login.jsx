@@ -8,6 +8,15 @@ import PageTransition from '../../components/PageTransition';
 import { X, Mail, KeyRound, Lock, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { api } from '../../api';
 
+const validatePassword = (pwd) => {
+  if (pwd.length < 8) return 'Password must be at least 8 characters long.';
+  if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
+  if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter.';
+  if (!/[0-9]/.test(pwd)) return 'Password must contain at least one number.';
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return 'Password must contain at least one special character.';
+  return null;
+};
+
 // ─── Forgot Password Modal ──────────────────────────────────────────────────
 function ForgotPasswordModal({ onClose }) {
   const [step, setStep] = useState(1); // 1=email 2=otp 3=newpass 4=done
@@ -104,6 +113,13 @@ function ForgotPasswordModal({ onClose }) {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError('');
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (newPassword !== confirmPassword) return setError('Passwords do not match');
     const otpStr = otp.join('');
     setLoading(true);
@@ -288,7 +304,7 @@ export default function Login() {
       else if (user.role === 'INSTRUCTOR') navigate('/admin/courses');
       else navigate('/courses');
     } catch (err) {
-      setError(err.message || 'Invalid credentials.');
+      setError('Invalid email or password');
     }
   };
 

@@ -21,6 +21,11 @@ export default function Courses() {
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState('');
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCourses, setTotalCourses] = useState(0);
 
   const navigate = useNavigate();
   const containerRef = useRef(null);
@@ -28,8 +33,10 @@ export default function Courses() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const data = await api.get('/courses');
-      setCourses(data);
+      const data = await api.get(`/courses?page=${page}&limit=12`);
+      setCourses(data.courses || []);
+      setTotalPages(data.totalPages || 1);
+      setTotalCourses(data.totalCourses || 0);
     } catch (err) {
       console.error("Failed to fetch courses:", err);
     } finally {
@@ -39,7 +46,7 @@ export default function Courses() {
 
   useEffect(() => {
     fetchCourses();
-  }, [user]);
+  }, [user, page]);
 
   useEffect(() => {
     if (loading || courses.length === 0) return;
@@ -143,7 +150,7 @@ export default function Courses() {
         <div className="h-32 -mx-5 -mt-5 mb-4 bg-[#F5F0EB] overflow-hidden border-b border-[#EAE4DD]">
           {course.imageUrl ? (
             <img 
-              src={`http://localhost:3000${course.imageUrl}`} 
+              src={course.imageUrl.startsWith('http') ? course.imageUrl : `http://localhost:3000${course.imageUrl}`} 
               alt={course.title} 
               className="w-full h-full object-cover"
             />
@@ -289,7 +296,7 @@ export default function Courses() {
                 <div className="col-span-4 flex items-center space-x-4">
                   <div className="w-10 h-10 bg-[#F5F0EB] rounded overflow-hidden flex-shrink-0 border border-[#EAE4DD]">
                     {c.imageUrl ? (
-                      <img src={`http://localhost:3000${c.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                      <img src={c.imageUrl.startsWith('http') ? c.imageUrl : `http://localhost:3000${c.imageUrl}`} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-[#FB460D]/10">
                         <span className="text-[10px] font-bold text-[#FB460D]/20 uppercase">NOVA</span>
@@ -320,6 +327,31 @@ export default function Courses() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center items-center space-x-4 mt-12 bg-white/50 py-4 px-6 rounded-full inline-flex mx-auto border border-[#EAE4DD]">
+            <Button 
+              variant="ghost" 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="!px-4 !py-2"
+            >
+              Previous
+            </Button>
+            <span className="text-[12px] font-bold text-[#8A817C]">
+              Page <span className="text-[#141314]">{page}</span> of {totalPages}
+            </span>
+            <Button 
+              variant="ghost" 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="!px-4 !py-2"
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>
